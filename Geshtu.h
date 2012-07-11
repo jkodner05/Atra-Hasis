@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+//#include "Jarasandha.c"
 
 #define HEADER_SIZE 8	//# bytes in a PNG header
 #define CH_SIZE 4		//$ bytes in a PNG "chunk" section
@@ -46,6 +47,8 @@ void unfilter2(unsigned char *prev, unsigned char *curr);	//reverses PNG filteri
 void unfilter3(unsigned char *prev, unsigned char *curr);	//reverses PNG filtering method 3
 void unfilter4(unsigned char *prev, unsigned char *curr);	//reverses PNG filtering method 4
 void unfilter(unsigned char *prev, unsigned char *curr, int type);	//directs unfiltering of PNG scanline
+char *encode_msg();							//encodes input text
+char *decode_msg(char *msg);							//decodes output text
 int read_code(unsigned char **chunk);		//reads hidden code out of a chunk
 int write_code(unsigned char **chunk);		//writes hidden code to a chunk
 

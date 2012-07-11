@@ -398,6 +398,37 @@ void unfilter(unsigned char *prev, unsigned char *curr, int type) {
 }
 
 
+char *encode_msg()
+{
+	unsigned int len = 0;
+	char *msg;
+	
+	while (!feof(ftext)) {
+		fgetc(ftext);
+		len++;
+	}
+	
+	msg = malloc(len*BYTE + 1);
+	rewind(ftext);
+	
+	len = 0;
+	while (!feof(ftext)) {
+		msg[len++] = fgetc(ftext);
+	}
+	
+	rewind(ftext);
+	/*encode*/
+	return msg;
+}
+
+
+char *decode_msg(char *msg)
+{
+		/*decode*/
+	return msg;
+}
+
+
 int read_code(unsigned char **chunk) {
 	
 	unsigned char *prevline = malloc(BYTE*step);
@@ -576,7 +607,7 @@ main(int argc, char *argv[]) {
 	else if(argc == 4) {
 		printf("ENCODING MESSAGE");
 		open_files(argv[1], argv[2], argv[3]);
-				
+		printf("%s\n", encode_msg());
 		IDATchunk = collate();
 		printf(".");
 
