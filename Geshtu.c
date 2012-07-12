@@ -120,14 +120,14 @@ void open_files(char *inname, char *outname, char* textname)
 }
 
 
-void free_chunk(unsigned char **chunk) 
+void free_chunk(datachunk *chunk) 
 {	
-	unsigned int size = chars_to_int(SIZECH); 
+	/*unsigned int size = chars_to_int(SIZECH); 
 	int x;
 	
 	for(x = 0; x < 4; x++)
 		if(x == 2)
-			free(chunk[x]);
+			free(chunk[x]);*/
 	free(chunk);
 }
 
@@ -138,25 +138,25 @@ void write_out(char *data, unsigned int size)
 }
 
 
-char *recalculate_crc(unsigned char **chunk) 
+char *recalculate_crc(datachunk *chunk) 
 {
-	int datasize = BYTE*(CH_SIZE + chars_to_int(SIZECH));
+	int datasize = BYTE*(CH_SIZE + chunk->sizenum);
 	int x;
 	char *data = malloc(datasize);
 	char *old_crc;
 	
 	for (x = 0; x < CH_SIZE; x++) 
-		data[x] = TYPECH[x];
+		data[x] = chunk->type[x];
 	
 	for (x = 0; x < datasize - CH_SIZE; x++) 
-		data[x+4] = BODYCH[x];
+		data[x+4] = chunk->body[x];
 	
-	old_crc = CRCCH;
-	CRCCH = int_to_chars(chksum_crc32(data, datasize));
+	old_crc = chunk->crc;
+	chunk->crc = int_to_chars(chksum_crc32(data, datasize));
 	free(old_crc);
 	free(data);
 	
-	return CRCCH;
+	return chunk->crc;
 }
 
 
@@ -171,10 +171,10 @@ char *get_header()
 }
 
 
-unsigned char **collate() 
+datachunk *collate() 
 {
-	unsigned char **chunk = malloc(BYTE*4); 
-	unsigned char **collated = malloc(BYTE*4);
+	datachunk *chunk = malloc(BYTE*sizeof(datachunk));
+	datachunk *collated = malloc(BYTE*sizeof(datachunk));
 	unsigned char *size, *type, *body, *crc;
 	unsigned int fullsize = 0, currtype = 0, deposit = 0;
 	unsigned int x;
@@ -187,18 +187,18 @@ unsigned char **collate()
 	get_header();
 	
 	chunk = process_chunk();
-	currtype = chars_to_int(TYPECH);
+	currtype = chunk->typenum;
 	while (currtype != IDAT)	//passes through non-data chunks
 	{	
 		chunk = process_chunk();
-		currtype = chars_to_int(TYPECH);
+		currtype = chunk->typenum;
 	}
 	
 	while (currtype == IDAT)	//sums sizes of data chunks
 	{
-		fullsize += chars_to_int(SIZECH);
+		fullsize += chunk->sizenum;
 		chunk = process_chunk();
-		currtype = chars_to_int(TYPECH);
+		currtype = chunk->typenum;
 	}
 	
 	body = malloc(BYTE*fullsize);
@@ -210,39 +210,41 @@ unsigned char **collate()
 	get_header();
 	
 	chunk = process_chunk();
-	currtype = chars_to_int(TYPECH);
+	currtype = chars_to_int(chunk->type);
 	while (currtype != IDAT) 
 	{
 		chunk = process_chunk();
-		currtype = chars_to_int(TYPECH);
+		currtype = chunk->typenum;
 	}
 	
 	while (currtype == IDAT)	//appends all data chunks
 	{
-		for (x = 0; x < chars_to_int(SIZECH); x++) 
-			body[deposit+x] = BODYCH[x];
-		deposit += chars_to_int(SIZECH);
+		for (x = 0; x < chunk->sizenum; x++) 
+			body[deposit+x] = chunk->body[x];
+		deposit += chunk->sizenum;
 		chunk = process_chunk();
-		currtype = chars_to_int(TYPECH);
+		currtype = chunk->typenum;
 	}
 	
 	blksize = 0x00000000;	//finds size of first compression block
 	blksize = (body[4] << 8) + body[3];
 	
-	collated[0] = size;
-	collated[1] = type;
-	collated[2] = body;
-	collated[3] = crc;
-	collated[3] = recalculate_crc(chunk);
+	collated->size = size;
+	collated->type = type;
+	collated->body = body;
+	collated->crc = crc;
+	collated->crc = recalculate_crc(chunk);
+	collated->sizenum = chars_to_int(size);
+	collated->typenum = chars_to_int(type);
 	
 	rewind(fin);	//restarts for the next function
 	return collated;
 }
 
 
-unsigned char **process_chunk() 
+datachunk *process_chunk() 
 {		
-	unsigned char **chunk; 
+	datachunk *chunk;
 	unsigned char *size, *type, *body, *crc;
 	unsigned int bodysize;
 	
@@ -258,15 +260,17 @@ unsigned char **process_chunk()
 	fread(body, BYTE, bodysize, fin);
 	fread(crc,  BYTE, CH_SIZE, fin);
 	
-	chunk = malloc(BYTE*4);
-	SIZECH = size;
-	TYPECH = type;
-	BODYCH = body;
-	CRCCH = crc;
+	chunk = malloc(BYTE*sizeof(datachunk));
+	chunk->size = size;
+	chunk->type = type;
+	chunk->body = body;
+	chunk->crc = crc;
+	chunk->sizenum = chars_to_int(size);
+	chunk->typenum = chars_to_int(type);
 	
-	if (chars_to_int(TYPECH) == IDHR)	//calculate length of scanline in pixels and bytes
+	if (chunk->typenum == IDHR)	//calculate length of scanline in pixels and bytes
 	{
-		scanlen = chars_to_int(BODYCH);
+		scanlen = chars_to_int(body);
 		step = (scanlen*3)+1;
 	}
 	
@@ -274,7 +278,7 @@ unsigned char **process_chunk()
 }
 
 
-void display(unsigned char **chunk) 
+/*void display(unsigned char **chunk) 
 {
 	unsigned int count = 7;
 	unsigned int type = chars_to_int(TYPECH);
@@ -292,7 +296,7 @@ void display(unsigned char **chunk)
 		printf("\n\n");
 		count += step;
 	}
-}
+}*/
 
 
 unsigned int paeth(unsigned int a, unsigned int b, unsigned int c) 
@@ -421,20 +425,22 @@ char *encode_msg()
 		msg[len++] = fgetc(ftext);
 	
 	rewind(ftext);
-	return encrypt_text(msg);
+	//return encrypt_text(msg);
+	return msg;
 }
 
 
 char *decode_msg(char *msg)
 {
-	return decrypt_text(msg);
+	//return decrypt_text(msg);
+	return msg;
 }
 
 
-char *read_code(unsigned char **chunk) 
+char *read_code(datachunk *chunk) 
 {	
-	unsigned int type = chars_to_int(TYPECH);
-	unsigned int size = chars_to_int(SIZECH);
+	unsigned int size = chunk->sizenum;
+	unsigned int type = chunk->typenum;
 	unsigned int stepct = 0;
 	unsigned int msgpos = 0;
 	unsigned int oldblksize, count, shift, linepos, x;
@@ -457,13 +463,13 @@ char *read_code(unsigned char **chunk)
 			if ((linepos + count)  == blksize+7)		//if start of compression header reached
 			{
 				blksize = 0x00000000;					//calc next and skip past this
-				blksize = (BODYCH[linepos+count+2] << 8) + BODYCH[linepos+count+1];
+				blksize = (chunk->body[linepos+count+2] << 8) + chunk->body[linepos+count+1];
 				blksize += oldblksize + 5;
 				count += 5;
 				x++;
 			}
 			if (count+linepos < size) 
-				currline[linepos] = BODYCH[linepos + count];
+				currline[linepos] = chunk->body[linepos + count];
 		}
 		unfilter(prevline, currline, currline[0]);		//unfilter compression header free line
 		blksize = oldblksize;
@@ -473,16 +479,16 @@ char *read_code(unsigned char **chunk)
 			if ((linepos + count)  == blksize+7) 
 			{
 				blksize = 0x00000000;
-				blksize = (BODYCH[count+linepos+2] << 8) + BODYCH[count+linepos+1];
+				blksize = (chunk->body[count+linepos+2] << 8) + chunk->body[count+linepos+1];
 				blksize += oldblksize + 5;
 				count += 5;
 			}
 			if (count+linepos < size) 
 			{
-				BODYCH[count+linepos] = currline[linepos];
+				chunk->body[count+linepos] = currline[linepos];
 				if (linepos) 
 				{
-					curr |= ((BODYCH[count+linepos] & charmask) << shift);	//rebuild each char
+					curr |= ((chunk->body[count+linepos] & charmask) << shift);	//rebuild each char
 					
 					if (shift == 7)		//output char when it's reconstructed
 					{	
@@ -506,10 +512,10 @@ char *read_code(unsigned char **chunk)
 }
 
 
-int write_code(unsigned char **chunk, char *msg) 
+int write_code(datachunk *chunk, char *msg) 
 {	
-	unsigned int type = chars_to_int(TYPECH);
-	unsigned int size = chars_to_int(SIZECH);
+	unsigned int size = chunk->sizenum;
+	unsigned int type = chunk->typenum;
 	unsigned int count = 7;
 	unsigned int x = 0;
 	unsigned int msgloc = 0;
@@ -520,12 +526,12 @@ int write_code(unsigned char **chunk, char *msg)
 	unsigned char matchmask = 0xFE;	//0b 1111 1110
 	char ch, shift;
 	
-	write_out(SIZECH, CH_SIZE);
-	write_out(TYPECH, CH_SIZE);
+	write_out(chunk->size, CH_SIZE);
+	write_out(chunk->type, CH_SIZE);
 	if(type != IDAT) 
 	{
-		write_out(BODYCH, size);
-		write_out(CRCCH, CH_SIZE);
+		write_out(chunk->body, size);
+		write_out(chunk->crc, CH_SIZE);
 		return type == IEND;
 	}
 
@@ -541,13 +547,13 @@ int write_code(unsigned char **chunk, char *msg)
 			if ((linepos + count)  == blksize+7) 
 			{
 				blksize = 0x00000000;
-				blksize = (BODYCH[linepos+count+2] << 8) + BODYCH[linepos+count+1];
+				blksize = (chunk->body[linepos+count+2] << 8) + chunk->body[linepos+count+1];
 				blksize += oldblksize + 5;
 				count += 5;
 				x++;
 			}
 			if (count+linepos < size)
-				currline[linepos] = BODYCH[linepos + count];
+				currline[linepos] = chunk->body[linepos + count];
 		}
 		unfilter(prevline, currline, currline[0]);
 		blksize = oldblksize;
@@ -557,17 +563,17 @@ int write_code(unsigned char **chunk, char *msg)
 			if ((linepos + count)  == blksize+7) 
 			{
 				blksize = 0x00000000;
-				blksize = (BODYCH[count+linepos+2] << 8) + BODYCH[count+linepos+1];
+				blksize = (chunk->body[count+linepos+2] << 8) + chunk->body[count+linepos+1];
 				blksize += oldblksize + 5;
 				count += 5;
 			}
 			if (count+linepos < size) 
 			{
-				BODYCH[count+linepos] = currline[linepos];
+				chunk->body[count+linepos] = currline[linepos];
 				if (linepos) 
 				{
-					BODYCH[count+linepos] &= matchmask;	//hide each bit of the char
-					BODYCH[count+linepos] |= ((ch >> shift) & charmask);
+					chunk->body[count+linepos] &= matchmask;	//hide each bit of the char
+					chunk->body[count+linepos] |= ((ch >> shift) & charmask);
 					
 					if (shift == 7) 
 					{
@@ -582,9 +588,9 @@ int write_code(unsigned char **chunk, char *msg)
 		}
 	}
 	
-	write_out(BODYCH, size);
-	CRCCH = recalculate_crc(chunk);
-	write_out(CRCCH, CH_SIZE);
+	write_out(chunk->body, size);
+	chunk->crc = recalculate_crc(chunk);
+	write_out(chunk->crc, CH_SIZE);
 	return FALSE;
 }
 
@@ -594,7 +600,7 @@ main(int argc, char *argv[])
 	int x;
 	int done = FALSE;
 	char *header, *msg;
-	unsigned char **chunk, **IDATchunk;
+	datachunk *chunk, *IDATchunk;
 	
 	//creates checksum table. Only needs to be called once
 	chksum_crc32gentab();
@@ -633,7 +639,7 @@ main(int argc, char *argv[])
 		free(header);
 		
 		chunk = process_chunk();
-		while (chars_to_int(TYPECH) != IDAT) 
+		while (chars_to_int(chunk->type) != IDAT) 
 		{
 			write_code(chunk, NULL);
 			free_chunk(chunk);
@@ -643,14 +649,14 @@ main(int argc, char *argv[])
 		free_chunk(IDATchunk);
 		printf(".");
 		
-		while (chars_to_int(TYPECH) == IDAT) 
+		while (chars_to_int(chunk->type) == IDAT) 
 		{
 			chunk = process_chunk();
 		}
 		write_code(chunk, NULL);
 		free_chunk(chunk);
 		
-		while (chars_to_int(TYPECH) != IEND) 
+		while (chars_to_int(chunk->type) != IEND) 
 		{
 			chunk = process_chunk();
 			write_code(chunk, NULL);
