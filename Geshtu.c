@@ -429,7 +429,7 @@ char *decode_msg(char *msg)
 }
 
 
-int read_code(unsigned char **chunk) {
+char *read_code(unsigned char **chunk) {
 	
 	unsigned char *prevline = malloc(BYTE*step);
 	unsigned char *currline = malloc(BYTE*step);
@@ -441,11 +441,12 @@ int read_code(unsigned char **chunk) {
 	unsigned int stepct = 0;
 	unsigned int shift;
 	char curr = '\0';
-	unsigned int x, linepos;
+	unsigned int x, linepos, msgpos = 0;
 	unsigned int oldblksize;
+	char *msg = malloc(BYTE*size/BYTE);
 	
 	if(type != IDAT) {
-		return;
+		return NULL;
 	}
 	
 	shift = 0;
@@ -480,9 +481,10 @@ int read_code(unsigned char **chunk) {
 					curr |= ((BODYCH[count+linepos] & charmask) << shift);	//rebuild each char
 					
 					if (shift == 7) {	//output char when it's reconstructed
-						printf("%c",curr);
-						if (!curr) {
-							return TRUE;
+						//printf("%c",curr);
+						msg[msgpos++] = curr;
+						if (curr == EOF /*!curr*/) {
+							return msg;
 						}
 						curr = '\0';
 						shift = 0;
@@ -495,11 +497,11 @@ int read_code(unsigned char **chunk) {
 		}
 	}
 	
-	return FALSE;
+	return msg;
 }
 
 
-int write_code(unsigned char **chunk) {
+int write_code(unsigned char **chunk, char *msg) {
 	
 	unsigned char prevline[BYTE*step];
 	unsigned char currline[BYTE*step];
@@ -511,6 +513,7 @@ int write_code(unsigned char **chunk) {
 	unsigned int count = 7;
 	unsigned int linepos, x=0;
 	unsigned int oldblksize;
+	unsigned int msgloc = 0;
 	
 	write_out(SIZECH, CH_SIZE);
 	write_out(TYPECH, CH_SIZE);
@@ -520,8 +523,10 @@ int write_code(unsigned char **chunk) {
 		return type == IEND;
 	}
 
-	ch = getc(ftext);
-	crcflag = ch != EOF;
+	ch = msg[msgloc];
+	//ch = getc(ftext);
+	//crcflag = ch != EOF;
+	crcflag = TRUE;
 	shift = 0;
 	for (count = 7; count < size; count += step) {
 		//printf("size - count %u\n", size-count);
@@ -556,10 +561,11 @@ int write_code(unsigned char **chunk) {
 					BODYCH[count+linepos] |= ((ch >> shift) & charmask);
 					
 					if (shift == 7) {
-						ch = getc(ftext);
-						if (ch == EOF) {
-							ch = '\0';
-						}
+						//ch = getc(ftext);
+						ch = msg[++msgloc];
+						//if (ch == EOF) {
+						//	ch = '\0';
+						//}
 						shift = 0;
 					}
 					else
@@ -582,7 +588,7 @@ int write_code(unsigned char **chunk) {
 main(int argc, char *argv[]) {	
 	
 	int x, done = FALSE;
-	char *header;
+	char *header, *msg;
 	unsigned char **chunk, **IDATchunk;
 	
 	chksum_crc32gentab();
@@ -601,13 +607,15 @@ main(int argc, char *argv[]) {
 		
 		printf(".\n");
 		printf("\nSTART DECODED MESSAGE:\n");
-		read_code(IDATchunk);
+		msg = read_code(IDATchunk);
+		msg = decode_msg(msg);
+		printf("\n%s\n", msg);
 		printf("\n:END DECODED MESSAGE\n\n");
 	}
 	else if(argc == 4) {
 		printf("ENCODING MESSAGE");
 		open_files(argv[1], argv[2], argv[3]);
-		printf("%s\n", encode_msg());
+		msg = encode_msg();
 		IDATchunk = collate();
 		printf(".");
 
@@ -617,23 +625,23 @@ main(int argc, char *argv[]) {
 		
 		chunk = process_chunk();
 		while (chars_to_int(TYPECH) != IDAT) {
-			write_code(chunk);
+			write_code(chunk, NULL);
 			free_chunk(chunk);
 			chunk = process_chunk();
 		}
-		write_code(IDATchunk); 
+		write_code(IDATchunk, msg); 
 		free_chunk(IDATchunk);
 		printf(".");
 		
 		while (chars_to_int(TYPECH) == IDAT) {
 			chunk = process_chunk();
 		}
-		write_code(chunk);
+		write_code(chunk, NULL);
 		free_chunk(chunk);
 		
 		while (chars_to_int(TYPECH) != IEND) {
 			chunk = process_chunk();
-			write_code(chunk);
+			write_code(chunk, NULL);
 			free_chunk(chunk);
 		}
 		printf(".\n");

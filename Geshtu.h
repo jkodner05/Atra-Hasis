@@ -49,8 +49,8 @@ void unfilter4(unsigned char *prev, unsigned char *curr);	//reverses PNG filteri
 void unfilter(unsigned char *prev, unsigned char *curr, int type);	//directs unfiltering of PNG scanline
 char *encode_msg();							//encodes input text
 char *decode_msg(char *msg);							//decodes output text
-int read_code(unsigned char **chunk);		//reads hidden code out of a chunk
-int write_code(unsigned char **chunk);		//writes hidden code to a chunk
+char *read_code(unsigned char **chunk);		//reads hidden code out of a chunk
+int write_code(unsigned char **chunk, char *msg);		//writes hidden code to a chunk
 
 //Following two functions found online 
 //http://www.koders.com/c/fid699AFE0A656F0022C9D6B9D1743E697B69CE5815.aspx
