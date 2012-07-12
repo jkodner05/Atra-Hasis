@@ -124,9 +124,10 @@ void free_chunk(unsigned char **chunk)
 {	
 	unsigned int size = chars_to_int(SIZECH); 
 	int x;
-	/*for(x = 0; x < 4; x++)
+	
+	for(x = 0; x < 4; x++)
 		if(x == 2)
-			free(chunk[x]);*/
+			free(chunk[x]);
 	free(chunk);
 }
 
@@ -139,8 +140,8 @@ void write_out(char *data, unsigned int size)
 
 char *recalculate_crc(unsigned char **chunk) 
 {
-	int x;
 	int datasize = BYTE*(CH_SIZE + chars_to_int(SIZECH));
+	int x;
 	char *data = malloc(datasize);
 	char *old_crc;
 	
@@ -172,7 +173,8 @@ char *get_header()
 
 unsigned char **collate() 
 {
-	unsigned char **chunk = malloc(BYTE*4), **collated = malloc(BYTE*4);
+	unsigned char **chunk = malloc(BYTE*4); 
+	unsigned char **collated = malloc(BYTE*4);
 	unsigned char *size, *type, *body, *crc;
 	unsigned int fullsize = 0, currtype = 0, deposit = 0;
 	unsigned int x;
@@ -240,7 +242,8 @@ unsigned char **collate()
 
 unsigned char **process_chunk() 
 {		
-	unsigned char **chunk, *size, *type, *body, *crc;
+	unsigned char **chunk; 
+	unsigned char *size, *type, *body, *crc;
 	unsigned int bodysize;
 	
 	size = malloc(BYTE*CH_SIZE);
@@ -335,6 +338,7 @@ void filter(unsigned char *prev, unsigned char *curr, int type)
 void unfilter1(unsigned char *curr) 
 {	
 	unsigned int pos;
+	
 	for (pos = 4; pos < step; pos++) 
 		curr[pos] += curr[pos-3];
 }
@@ -343,6 +347,7 @@ void unfilter1(unsigned char *curr)
 void unfilter2(unsigned char *prev, unsigned char *curr) 
 {
 	unsigned int pos;
+	
 	for (pos = 1; pos < step; pos++) 
 		curr[pos] += prev[pos];
 }
@@ -351,6 +356,7 @@ void unfilter2(unsigned char *prev, unsigned char *curr)
 void unfilter3(unsigned char *prev, unsigned char *curr) 
 {	
 	unsigned int pos;
+	
 	curr[1] += prev[1]/2;
 	curr[2] += prev[2]/2;
 	curr[3] += prev[3]/2;
@@ -362,6 +368,7 @@ void unfilter3(unsigned char *prev, unsigned char *curr)
 void unfilter4(unsigned char *prev, unsigned char *curr) 
 {	
 	unsigned int pos, predictor;
+	
 	curr[1] += paeth(0, prev[1], 0);
 	curr[2] += paeth(0, prev[2], 0);
 	curr[3] += paeth(0, prev[3], 0);
@@ -414,33 +421,29 @@ char *encode_msg()
 		msg[len++] = fgetc(ftext);
 	
 	rewind(ftext);
-	/*encode*/
-	return msg;
+	return encrypt_text(msg);
 }
 
 
 char *decode_msg(char *msg)
 {
-		/*decode*/
-	return msg;
+	return decrypt_text(msg);
 }
 
 
 char *read_code(unsigned char **chunk) 
 {	
-	unsigned char *prevline = malloc(BYTE*step);
-	unsigned char *currline = malloc(BYTE*step);
 	unsigned int type = chars_to_int(TYPECH);
 	unsigned int size = chars_to_int(SIZECH);
+	unsigned int stepct = 0;
+	unsigned int msgpos = 0;
+	unsigned int oldblksize, count, shift, linepos, x;
+	unsigned char *prevline = malloc(BYTE*step);
+	unsigned char *currline = malloc(BYTE*step);
 	unsigned char charmask = 0x01;
 	unsigned char matchmask = 0xFE;
-	unsigned int count;
-	unsigned int stepct = 0;
-	unsigned int shift;
-	char curr = '\0';
-	unsigned int x, linepos, msgpos = 0;
-	unsigned int oldblksize;
 	char *msg = malloc(BYTE*size/BYTE);
+	char curr = '\0';
 	
 	if(type != IDAT)	return NULL;
 	
@@ -484,7 +487,7 @@ char *read_code(unsigned char **chunk)
 					if (shift == 7)		//output char when it's reconstructed
 					{	
 						msg[msgpos++] = curr;
-						if (curr == EOF /*!curr*/)
+						if (curr == EOF /*!curr*/) //entire message was encluded
 							return msg;
 						curr = '\0';
 						shift = 0;
@@ -497,23 +500,25 @@ char *read_code(unsigned char **chunk)
 		}
 	}
 	
+	//message was clipped due to size constraints
+	msg[msgpos] = EOF;
 	return msg;
 }
 
 
 int write_code(unsigned char **chunk, char *msg) 
 {	
-	unsigned char prevline[BYTE*step];
-	unsigned char currline[BYTE*step];
 	unsigned int type = chars_to_int(TYPECH);
 	unsigned int size = chars_to_int(SIZECH);
-	unsigned char charmask = 0x01;
-	unsigned char matchmask = 0xFE;
-	char ch, shift, crcflag;
 	unsigned int count = 7;
-	unsigned int linepos, x = 0;
-	unsigned int oldblksize;
+	unsigned int x = 0;
 	unsigned int msgloc = 0;
+	unsigned int linepos, oldblksize;
+	unsigned char prevline[BYTE*step];
+	unsigned char currline[BYTE*step];
+	unsigned char charmask = 0x01;	//0b 0000 0001
+	unsigned char matchmask = 0xFE;	//0b 1111 1110
+	char ch, shift;
 	
 	write_out(SIZECH, CH_SIZE);
 	write_out(TYPECH, CH_SIZE);
@@ -526,7 +531,6 @@ int write_code(unsigned char **chunk, char *msg)
 
 	//if this is a data chunk, can write data here
 	ch = msg[msgloc];
-	crcflag = TRUE;
 	shift = 0;
 	for (count = 7; count < size; count += step) 
 	{
@@ -587,7 +591,8 @@ int write_code(unsigned char **chunk, char *msg)
 
 main(int argc, char *argv[]) 
 {	
-	int x, done = FALSE;
+	int x;
+	int done = FALSE;
 	char *header, *msg;
 	unsigned char **chunk, **IDATchunk;
 	
