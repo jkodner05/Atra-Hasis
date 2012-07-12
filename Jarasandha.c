@@ -67,7 +67,7 @@ void codeSwap(char msg[], char codeString[], int msgLen)
 }
 
 /* Use the Feistel network to retrace path to plain text */
-void decodeSwap(char msg[], char codeString[], int msgLen)
+void decodeSwap(char *msg, char codeString[], int msgLen)
 {
   int i;
   /* XOR decode more coded half of message */
@@ -98,17 +98,13 @@ int encrypt(char msg[])
   /* Count size of message */
   msgLen = strlen(msg);
 
-  /* Ignore blank lines */
-  if (msgLen == 1)
-    return msgLen;
-  
   /* Make sure message has even length */
   if (msgLen % 2 > 0)
     msgLen++;
    
   /* Encode plain text */
   for (i = 1; i <= ROUNDS; i++) {
-    /* Generate round key from primary key */
+    // Generate round key from primary key
     memset(cipher, '\0', MAXLINE);
     memset(roundKey, '\0', MAXLINE);
     
@@ -130,7 +126,7 @@ int encrypt(char msg[])
     /* XOR encode and swap halves */
     codeSwap(msg,codeString,msgLen);
   }
-  
+
   return msgLen;
 }
 
@@ -170,6 +166,94 @@ void decrypt(char msg[], int msgLen)
   }
 }
 
+
+/* INPUT: string representing ENTIRE text of file to be encoded.
+ * EOF delimited.
+ * OUTPUT: string representing entire encoded text.
+ * EOF delimited. */
+char *encrypt_text(const char *msg)
+{ 
+  int c, i, j, rpos, wpos, keyLen, msgLen;
+  char chunk[MAXLINE];
+  char *ciphertext;
+
+  /* Count size of message */
+  msgLen = 0;
+  while ((c = *(msg + msgLen++)) != EOF)
+    ;
+
+  ciphertext = malloc((msgLen + 1) * BYTE);
+  memset(chunk, '\0', MAXLINE);
+
+  rpos = wpos = i = 0;
+  /* Read in message */
+  while ((c = *(msg + rpos++)) != EOF) {
+    chunk[i++] = c;
+    /* Encrypt chunk by chunk */
+    if (i == MAXLINE - 2) {
+      i = encrypt(chunk);
+      /* Write ciphertext to output */
+      for (j = 0; j < i; j++)
+      	*(ciphertext + wpos++) = chunk[j];
+      memset(chunk, '\0', MAXLINE);
+      i = 0;
+    }
+  }
+  /* Write last chunk to output */
+  if (i > 0) {
+    i = encrypt(chunk);
+    for (j = 0; j < i; j++)
+      *(ciphertext + wpos++) = chunk[j];
+  }
+  *(ciphertext + wpos) = EOF;
+
+  return ciphertext;
+}
+
+/* INPUT: string representing entire text to decoded.
+ * EOF delimited
+ * OUTPUT: string representing entire decoded text. 
+ * \0 delimited
+ */
+char *decrypt_text(const char *msg)
+{
+  int c, i, j, rpos, wpos, msgLen, keyLen, x;
+  char chunk[MAXLINE];
+  char *plaintext;
+
+  /* Count size of message */
+  msgLen = 0;
+  while ((c = *(msg + msgLen++)) != EOF)
+    ;
+
+  plaintext = malloc((msgLen + 2) * BYTE);
+  memset(chunk, '\0', MAXLINE);
+
+  rpos = wpos = i = 0;
+  /* Read in input */
+  while((c = *(msg + rpos++)) != EOF) {
+    chunk[i++] = c;
+    /* Decode chunk by chunk */
+    if (i == MAXLINE - 2) {
+      decrypt(chunk, i);
+      /* Write decoded text to output */
+      for (j = 0; (c = chunk[j]) != '\0'; j++)
+	*(plaintext + wpos++) = c;
+      memset(chunk, '\0', MAXLINE);
+      i = 0;
+    }
+  }
+  /* Write last chunk */
+  if (i > 0) {
+    decrypt(chunk,i);
+    for (j = 0; (c = chunk[j]) != '\0'; j++)
+      *(plaintext + wpos++) = c;
+  }
+  *(plaintext + wpos) = EOF;
+
+  return plaintext;
+}
+
 main(int argc, char *argv[])
 {
   /* Warn users of wrong number of arguments */
@@ -186,15 +270,16 @@ main(int argc, char *argv[])
 
   /* If argument count is acceptable, continue */
   else {
-    int i, c, j, ch, len, mode, keyLen;
+    int i, j, c, mode, msgLen, keyLen;
     char arg[MAXLINE], in[MAXLINE], out[MAXLINE], line[MAXLINE];
-    FILE *fin, *fout, *ftemp;
+    char *input, *output;
+    FILE *fin, *fout;
     mode = ENCODE;
     in[0] = '\0';
     out[0] = '\0';
     
     for (i =1; i < argc; i++) {
-      len = sprintf(arg, "%s", argv[i]);
+      sprintf(arg, "%s", argv[i]);
       /* Recognize decode option */
       if (arg[0] == '-')
 	if (arg[1] == 'd' && arg[2] == '\0')
@@ -204,9 +289,9 @@ main(int argc, char *argv[])
 	  return;
 	}
       else if (in[0] == '\0')
-	len = sprintf(in, "%s", arg);
+	sprintf(in, "%s", arg);
       else
-	len = sprintf(out, "%s", arg);
+	sprintf(out, "%s", arg);
     }
         
     /* Terminate with error message if no input file given */
@@ -225,54 +310,31 @@ main(int argc, char *argv[])
     else
       fout = fopen(out, "w");
     
-    /* Convert input to output piece by piece */
-    
-    memset(line, '\0', MAXLINE);
-    i = 0;
-    j = 0;
-    len = MAXLINE - 2;
-    if (mode == ENCODE) {
-      while ((c = fgetc(fin)) != EOF) {
-	line[i] = c;
-	i++;
-	if (i == len) {
-	  j = encrypt(line);
-	  for (i = 0; i < j; i++) {
-	    c = line[i];
-	    fputc(c, fout);
-	  }
-	  memset(line, '\0', MAXLINE);
-	  i = 0;
-	}
-      }
-      if (i > 0) {
-	j = encrypt(line);
-	for (i = 0; i < j; i++) {
-	  c = line[i];
-	  fputc(c, fout);
-	}
-	memset(line, '\0', MAXLINE);
-      }
-    }
-    else {
-      while ((c = fgetc(fin)) != EOF) {
-	line[i] = c;
-	i++;
-	if (i == len) {
-	  decrypt(line, i);
-	  for (j = 0; (ch = line[j]) != '\0'; j++)
-	    fputc(ch, fout);
-	  memset(line, '\0', MAXLINE);
-	  i = 0;
-	}
-      }
-      if (i > 0) {
-	decrypt(line,i);
-	for (j = 0; (ch = line[j]) != '\0'; j++)
-	  fputc(ch, fout);
-	memset(line, '\0', MAXLINE);
-      }
-    }
+    /* Perform cryptographical processes */
+
+    /* Count file length */
+    for (msgLen = 0; (c = fgetc(fin)) != EOF; msgLen++)
+      ;
+
+    /* Reopen file and copy to char pointer on heap */
+    rewind(fin);
+    input = malloc((msgLen + 2) * BYTE);
+    output = malloc((msgLen + 2) * BYTE);
+    memset(input, '\0', msgLen + 2);
+    memset(output, '\0', msgLen + 2);
+
+    for (i = 0; (c = fgetc(fin)) != EOF; i++)
+      input[i] = c;
+    input[i] = c;
+
+    /* Convert input to output */
+    if (mode == ENCODE)
+      output = encrypt_text(input);
+    else
+      output = decrypt_text(input);
+
+    fwrite(output, BYTE, msgLen + (msgLen % 2), fout);
+
     fclose(fin);
     fclose(fout);
   }

@@ -9,12 +9,19 @@
 #define ROUNDS 32
 #define ENCODE 1
 #define DECODE 0
-// Use MAXLINE > length of key, but MAXLINE < 2 * length of key
+/* Use even MAXLINE such that MAXLINE > length of key,
+ * but MAXLINE < (2 * length of key)
+ */
 #define MAXLINE 60
+#define BYTE sizeof(char)
 
 int encrypt(char msg[]);
 
 void decrypt(char msg[], int msgLen);
+
+char *encrypt_text(const char *msg);
+
+char *decrypt_text(const char *msg);
 
 void feistel(char codeString[], char roundKey[],
 	     int msgLength, int keyLength);
