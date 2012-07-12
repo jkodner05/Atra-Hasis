@@ -442,7 +442,7 @@ char *read_code(unsigned char **chunk)
 	unsigned char *currline = malloc(BYTE*step);
 	unsigned char charmask = 0x01;
 	unsigned char matchmask = 0xFE;
-	char *msg = malloc(BYTE*size/BYTE);
+	char *msg = malloc(BYTE*size/BYTE*3);
 	char curr = '\0';
 	
 	if(type != IDAT)	return NULL;
