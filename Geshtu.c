@@ -210,7 +210,7 @@ datachunk *collate()
 	get_header();
 	
 	chunk = process_chunk();
-	currtype = chars_to_int(chunk->type);
+	currtype = currtype = chunk->typenum;
 	while (currtype != IDAT) 
 	{
 		chunk = process_chunk();
@@ -236,7 +236,7 @@ datachunk *collate()
 	collated->crc = recalculate_crc(chunk);
 	collated->sizenum = chars_to_int(size);
 	collated->typenum = chars_to_int(type);
-	
+
 	rewind(fin);	//restarts for the next function
 	return collated;
 }
@@ -524,7 +524,7 @@ int write_code(datachunk *chunk, char *msg)
 	unsigned char currline[BYTE*step];
 	unsigned char charmask = 0x01;	//0b 0000 0001
 	unsigned char matchmask = 0xFE;	//0b 1111 1110
-	char ch, shift;
+	char ch, shift, endflag;
 	
 	write_out(chunk->size, CH_SIZE);
 	write_out(chunk->type, CH_SIZE);
@@ -537,6 +537,7 @@ int write_code(datachunk *chunk, char *msg)
 
 	//if this is a data chunk, can write data here
 	ch = msg[msgloc];
+	endflag = ch == EOF;
 	shift = 0;
 	for (count = 7; count < size; count += step) 
 	{
@@ -577,7 +578,11 @@ int write_code(datachunk *chunk, char *msg)
 					
 					if (shift == 7) 
 					{
-						ch = msg[++msgloc];
+						if (!endflag) 
+						{
+							ch = msg[++msgloc];
+							endflag = ch == EOF;
+						}
 						shift = 0;
 					}
 					else

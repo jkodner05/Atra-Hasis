@@ -30,10 +30,10 @@
 
 typedef struct
 {
-	char *size;
-	char *type;
-	char *body;
-	char *crc;
+	unsigned char *size;
+	unsigned char *type;
+	unsigned char *body;
+	unsigned char *crc;
 	unsigned int sizenum;
 	unsigned int typenum;
 } datachunk;
