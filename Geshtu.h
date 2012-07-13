@@ -16,10 +16,6 @@
 #define CH_SIZE 4		//$ bytes in a PNG "chunk" section
 #define BYTE sizeof(char)
 
-#define SIZECH chunk[0]	//size chunk
-#define TYPECH chunk[1]	//type chunk
-#define BODYCH chunk[2]	//body chunk
-#define CRCCH  chunk[3]	//checksum chunk
 #define IDHR 0x49484452 //hex representation of ASCII IDHR
 #define IDAT 0x49444154	//hex representation of ASCII IDAT
 #define IEND 0x49454e44 //hex representation of ASCII IEND
@@ -39,11 +35,6 @@ typedef struct
 
 //void display(unsigned char **chunk);		//for testing. displays image by scanline
 
-unsigned int chars_to_int(unsigned char *bytes);		//converts 4 bytes to little-endian 32-bit int
-unsigned char *int_to_chars(unsigned int integer);	//converts little-endian 32-bit int to 4 bytes
-void free_chunk(datachunk *chunk);		//frees chunk data structure
-unsigned char *recalculate_crc(datachunk *chunk); //
-datachunk *process_chunk();			//reads and parses chunk from image
 unsigned int paeth(unsigned int a, unsigned int b, unsigned int c);	//implements paeth prediction
 void filter1(unsigned char *curr);			//performs PNG filtering method 1
 void filter(unsigned char *prev, unsigned char *curr, int type);	//directs PNG filtering by type (only 1 implemented)

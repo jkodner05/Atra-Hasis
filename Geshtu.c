@@ -60,62 +60,6 @@ void chksum_crc32gentab ()
 }
 
 
-unsigned int chars_to_int(unsigned char *bytes) 
-{
-	unsigned int *chars = (unsigned int *) bytes;
-	
-	return	(*chars << 0x18) |				//just inverts the bytes
-			(*chars << 0x08 & 0x00FF0000) |
-			(*chars >> 0x08 & 0x0000FF00) |
-			(*chars >> 0x18);	
-}
-
-
-unsigned char *int_to_chars(unsigned int integer) 
-{
-	unsigned char *chars = malloc(4*BYTE);
-	
-	chars[3] = (char) (integer & 0x000000FF);	//inverts the bytes
-	chars[2] = (char) ((integer & 0x0000FF00) >> 0x08);
-	chars[1] = (char) ((integer & 0x00FF0000) >> 0x10);
-	chars[0] = (char) (integer >> 0x18);
-	
-	return chars;
-}
-
-void free_chunk(datachunk *chunk) 
-{	
-	/*unsigned int size = chars_to_int(SIZECH); 
-	int x;
-	
-	for(x = 0; x < 4; x++)
-		if(x == 2)
-			free(chunk[x]);*/
-	free(chunk);
-}
-
-
-unsigned char *recalculate_crc(datachunk *chunk) 
-{
-	int datasize = BYTE*(CH_SIZE + chunk->sizenum);
-	int x;
-	char *data = malloc(datasize);
-	unsigned char *old_crc;
-	
-	for (x = 0; x < CH_SIZE; x++) 
-		data[x] = chunk->type[x];
-	
-	for (x = 0; x < datasize - CH_SIZE; x++) 
-		data[x+4] = chunk->body[x];
-	
-	old_crc = chunk->crc;
-	chunk->crc = (unsigned char *)int_to_chars(chksum_crc32(data, datasize));
-	free(old_crc);
-	free(data);
-	
-	return chunk->crc;
-}
-
 /*void display(unsigned char **chunk) 
 {
 	unsigned int count = 7;
