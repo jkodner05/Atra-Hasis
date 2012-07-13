@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-//#include "Jarasandha.c"
+#include "Jarasandha.c"
 
 #define HEADER_SIZE 8	//# bytes in a PNG header
 #define CH_SIZE 4		//$ bytes in a PNG "chunk" section

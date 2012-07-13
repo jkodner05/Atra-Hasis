@@ -254,9 +254,10 @@ char *decrypt_text(const char *msg)
   return plaintext;
 }
 
+/*
 main(int argc, char *argv[])
 {
-  /* Warn users of wrong number of arguments */
+  // Warn users of wrong number of arguments
   if (argc < 3 || argc > 4) {
     printf("Invalid number of arguments.\n");
     printf("The blockCode program takes 2-3 arguments.\n");
@@ -268,7 +269,7 @@ main(int argc, char *argv[])
     printf("and is encrypted by default.\n");
   }
 
-  /* If argument count is acceptable, continue */
+  // If argument count is acceptable, continue
   else {
     int i, j, c, mode, msgLen, keyLen;
     char arg[MAXLINE], in[MAXLINE], out[MAXLINE], line[MAXLINE];
@@ -280,7 +281,7 @@ main(int argc, char *argv[])
     
     for (i =1; i < argc; i++) {
       sprintf(arg, "%s", argv[i]);
-      /* Recognize decode option */
+      // Recognize decode option
       if (arg[0] == '-')
 	if (arg[1] == 'd' && arg[2] == '\0')
 	  mode = DECODE;
@@ -294,7 +295,7 @@ main(int argc, char *argv[])
 	sprintf(out, "%s", arg);
     }
         
-    /* Terminate with error message if no input file given */
+    // Terminate with error message if no input file given 
     if (in[0] == '\0') {
       printf("Error: no input file specified.\n");
       return;
@@ -302,7 +303,7 @@ main(int argc, char *argv[])
     else
       fin = fopen(in, "r");
     
-    /* Terminate with error message if no output file given */
+    // Terminate with error message if no output file given 
     if (out[0] == '\0') {
       printf("Error: no output file specified.\n");
       return;
@@ -310,13 +311,13 @@ main(int argc, char *argv[])
     else
       fout = fopen(out, "w");
     
-    /* Perform cryptographical processes */
+    // Perform cryptographical processes
 
-    /* Count file length */
+    // Count file length
     for (msgLen = 0; (c = fgetc(fin)) != EOF; msgLen++)
       ;
 
-    /* Reopen file and copy to char pointer on heap */
+    // Reopen file and copy to char pointer on heap
     rewind(fin);
     input = malloc((msgLen + 2) * BYTE);
     output = malloc((msgLen + 2) * BYTE);
@@ -327,7 +328,7 @@ main(int argc, char *argv[])
       input[i] = c;
     input[i] = c;
 
-    /* Convert input to output */
+    // Convert input to output
     if (mode == ENCODE)
       output = encrypt_text(input);
     else
@@ -339,3 +340,4 @@ main(int argc, char *argv[])
     fclose(fout);
   }
 }
+*/

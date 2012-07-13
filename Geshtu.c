@@ -425,15 +425,13 @@ char *encode_msg()
 		msg[len++] = fgetc(ftext);
 	
 	rewind(ftext);
-	//return encrypt_text(msg);
-	return msg;
+	return encrypt_text(msg);
 }
 
 
 char *decode_msg(char *msg)
 {
-	//return decrypt_text(msg);
-	return msg;
+	return decrypt_text(msg);
 }
 
 
