@@ -598,7 +598,7 @@ int write_code(datachunk *chunk, char *msg)
 }
 
 
-main(int argc, char *argv[]) 
+geshtu_main(int argc, char *argv[]) 
 {	
 	int x;
 	int done = FALSE;
