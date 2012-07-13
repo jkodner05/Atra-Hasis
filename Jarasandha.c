@@ -139,9 +139,6 @@ void decrypt(char msg[], int msgLen)
   char cipher[MAXLINE];
   char roundKey[MAXLINE];
 
-  if (msgLen == 1)
-    return;
-
   /* Decode cipher text */
   for (i = ROUNDS; i > 0; i--) {
     /* Generate round key from primary key */
@@ -219,7 +216,7 @@ char *encrypt_text(const char *msg)
  */
 char *decrypt_text(const char *msg)
 {
-  int c, i, j, rpos, wpos, msgLen, x;
+  int c, i, j, rpos, wpos, msgLen;
   char chunk[MAXLINE];
   char *plaintext;
 
@@ -251,13 +248,12 @@ char *decrypt_text(const char *msg)
     for (j = 0; (c = chunk[j]) != '\0'; j++)
       *(plaintext + wpos++) = c;
   }
-  *(plaintext + wpos) = EOF;
 
   return plaintext;
 }
 
 /*
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   // Warn users of wrong number of arguments
   if (argc < 3 || argc > 4) {
@@ -273,8 +269,8 @@ main(int argc, char *argv[])
 
   // If argument count is acceptable, continue
   else {
-    int i, j, c, mode, msgLen, keyLen;
-    char arg[MAXLINE], in[MAXLINE], out[MAXLINE], line[MAXLINE];
+    int i, c, mode, msgLen;
+    char arg[MAXLINE], in[MAXLINE], out[MAXLINE];
     char *input, *output;
     FILE *fin, *fout;
     mode = ENCODE;
@@ -289,7 +285,7 @@ main(int argc, char *argv[])
 	  mode = DECODE;
 	else {
 	  printf("\nError: Option not recognized.\n");
-	  return;
+	  return 1;
 	}
       else if (in[0] == '\0')
 	sprintf(in, "%s", arg);
@@ -300,7 +296,7 @@ main(int argc, char *argv[])
     // Terminate with error message if no input file given 
     if (in[0] == '\0') {
       printf("Error: no input file specified.\n");
-      return;
+      return 1;
     }
     else
       fin = fopen(in, "r");
@@ -308,7 +304,7 @@ main(int argc, char *argv[])
     // Terminate with error message if no output file given 
     if (out[0] == '\0') {
       printf("Error: no output file specified.\n");
-      return;
+      return 1;
     }
     else
       fout = fopen(out, "w");
@@ -342,5 +338,5 @@ main(int argc, char *argv[])
     fclose(fout);
   }
   return 0;
-}
-*/
+}*/
+
