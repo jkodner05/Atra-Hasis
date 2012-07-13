@@ -34,3 +34,4 @@ void rotateKey(char cipher[], char new, int keyLength);
 void codeSwap(char msg[], char codeString[], int msgLength);
 
 void decodeSwap(char msg[], char codeString[], int msgLength);
+

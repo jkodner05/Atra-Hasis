@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "Jarasandha.c"
 
 #define HEADER_SIZE 8	//# bytes in a PNG header
 #define CH_SIZE 4		//$ bytes in a PNG "chunk" section
@@ -42,12 +41,8 @@ typedef struct
 
 unsigned int chars_to_int(char *bytes);		//converts 4 bytes to little-endian 32-bit int
 char *int_to_chars(unsigned int integer);	//converts little-endian 32-bit int to 4 bytes
-void close_files();							//closes in and out image files
-void open_files(char *inname, char *outname, char *textname);	//opens image files of specified names
 void free_chunk(datachunk *chunk);		//frees chunk data structure
-void write_out(char *data, unsigned int size);	//writes to out image file
 char *recalculate_crc(datachunk *chunk); //
-char *get_header();							//reads header from image
 datachunk *process_chunk();			//reads and parses chunk from image
 unsigned int paeth(unsigned int a, unsigned int b, unsigned int c);	//implements paeth prediction
 void filter1(unsigned char *curr);			//performs PNG filtering method 1
@@ -57,8 +52,6 @@ void unfilter2(unsigned char *prev, unsigned char *curr);	//reverses PNG filteri
 void unfilter3(unsigned char *prev, unsigned char *curr);	//reverses PNG filtering method 3
 void unfilter4(unsigned char *prev, unsigned char *curr);	//reverses PNG filtering method 4
 void unfilter(unsigned char *prev, unsigned char *curr, int type);	//directs unfiltering of PNG scanline
-char *encode_msg();							//encodes input text
-char *decode_msg(char *msg);							//decodes output text
 char *read_code(datachunk *chunk);		//reads hidden code out of a chunk
 int write_code(datachunk *chunk, char *msg);		//writes hidden code to a chunk
 
