@@ -42,14 +42,14 @@ void open_files(char *inname, char *outname, char* textname)
 	}
 }
 
-void write_out(char *data, unsigned int size) 
+void write_out(unsigned char *data, unsigned int size) 
 {
 	fwrite(data, BYTE, size, fout);
 }
 
-char *get_header() 
+unsigned char *get_header() 
 {	
-	char *header;
+	unsigned char *header;
 	
 	header = malloc(BYTE*HEADER_SIZE);
 	fread(header, BYTE, HEADER_SIZE, fin);
@@ -165,19 +165,20 @@ datachunk *collate()
 
 int write_body(datachunk *chunk, char *msg)
 {
+	int success;
 	write_out(chunk->size, CH_SIZE);
 	write_out(chunk->type, CH_SIZE);
 	if(chunk->typenum != IDAT) 
 	{
 		write_out(chunk->body, chunk->sizenum);
 		write_out(chunk->crc, CH_SIZE);
-		return chunk->typenum == IEND;
+		return FALSE;
 	}
-	write_code(chunk, msg);
+	success = write_code(chunk, msg);
 	write_out(chunk->body, chunk->sizenum);
 	chunk->crc = recalculate_crc(chunk);
 	write_out(chunk->crc, CH_SIZE);
-	return FALSE;
+	return success;
 }
 
 
@@ -209,12 +210,12 @@ char *decode_msg(char *msg)
 	return decrypt_text(msg);
 }
 
-main(int argc, char *argv[]) 
+int main(int argc, char *argv[]) 
 {
-	int x;
-	int done = FALSE;
-	char *header, *msg;
+	unsigned char *header;
+	char *msg;
 	datachunk *chunk, *IDATchunk;
+	int success = FALSE;
 	
 	//creates checksum table. Only needs to be called once
 	chksum_crc32gentab();
@@ -222,18 +223,18 @@ main(int argc, char *argv[])
 	if(argc > 4 || argc < 2)	//if the format is wrong...
 	{	
 		printf("\n\t***INCORRECT ARGUMENT FORMAT***\n\n");
-		printf("to ENCODE:\t ./steganography [input image] [input text] [output image]\n");
+		printf("to ENCODE:\t ./steganography [input image] [output image] [input text]\n");
 		printf("to DECODE:\t ./steganography [input image]\n\n");
 		return 0;
 	}
 	else if(argc == 2)	//if decode format is entered
 	{	
-		printf("DECODING MESSAGE.");
+		printf("DECODING MESSAGE.\n");
 		open_files(argv[1], NULL, NULL);
-		printf(".");
+		printf("\b.\n");
 		IDATchunk = collate();
 		
-		printf(".\n");
+		printf("\b.\n");
 		printf("\nSTART DECODED MESSAGE:\n");
 		msg = read_code(IDATchunk);
 		msg = decode_msg(msg);
@@ -242,7 +243,7 @@ main(int argc, char *argv[])
 	}
 	else if(argc == 4)	//if encode format is entered
 	{
-		printf("ENCODING MESSAGE");
+		printf("ENCODING MESSAGE\n");
 		open_files(argv[1], argv[2], argv[3]);
 		msg = encode_msg();
 		IDATchunk = collate();
@@ -259,7 +260,7 @@ main(int argc, char *argv[])
 			free_chunk(chunk);
 			chunk = process_chunk();
 		}
-		write_body(IDATchunk, msg); 
+		success = write_body(IDATchunk, msg); 
 		free_chunk(IDATchunk);
 		printf(".");
 		
@@ -278,7 +279,11 @@ main(int argc, char *argv[])
 		}
 		printf(".\n");
 		
-		printf("MESSAGE ENCODED SUCCESSFULLY\n");
+		if (success)
+			printf("MESSAGE ENCODED SUCCESSFULLY\n");
+		else 
+			printf("MESSAGE ENCODING FAILED\nMaybe your image was too small?\n");
+
 	}
 	close_files();
 	

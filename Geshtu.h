@@ -39,10 +39,10 @@ typedef struct
 
 //void display(unsigned char **chunk);		//for testing. displays image by scanline
 
-unsigned int chars_to_int(char *bytes);		//converts 4 bytes to little-endian 32-bit int
-char *int_to_chars(unsigned int integer);	//converts little-endian 32-bit int to 4 bytes
+unsigned int chars_to_int(unsigned char *bytes);		//converts 4 bytes to little-endian 32-bit int
+unsigned char *int_to_chars(unsigned int integer);	//converts little-endian 32-bit int to 4 bytes
 void free_chunk(datachunk *chunk);		//frees chunk data structure
-char *recalculate_crc(datachunk *chunk); //
+unsigned char *recalculate_crc(datachunk *chunk); //
 datachunk *process_chunk();			//reads and parses chunk from image
 unsigned int paeth(unsigned int a, unsigned int b, unsigned int c);	//implements paeth prediction
 void filter1(unsigned char *curr);			//performs PNG filtering method 1

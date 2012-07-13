@@ -60,7 +60,7 @@ void chksum_crc32gentab ()
 }
 
 
-unsigned int chars_to_int(char *bytes) 
+unsigned int chars_to_int(unsigned char *bytes) 
 {
 	unsigned int *chars = (unsigned int *) bytes;
 	
@@ -71,9 +71,9 @@ unsigned int chars_to_int(char *bytes)
 }
 
 
-char *int_to_chars(unsigned int integer) 
+unsigned char *int_to_chars(unsigned int integer) 
 {
-	char *chars = malloc(4*BYTE);
+	unsigned char *chars = malloc(4*BYTE);
 	
 	chars[3] = (char) (integer & 0x000000FF);	//inverts the bytes
 	chars[2] = (char) ((integer & 0x0000FF00) >> 0x08);
@@ -95,12 +95,12 @@ void free_chunk(datachunk *chunk)
 }
 
 
-char *recalculate_crc(datachunk *chunk) 
+unsigned char *recalculate_crc(datachunk *chunk) 
 {
 	int datasize = BYTE*(CH_SIZE + chunk->sizenum);
 	int x;
 	char *data = malloc(datasize);
-	char *old_crc;
+	unsigned char *old_crc;
 	
 	for (x = 0; x < CH_SIZE; x++) 
 		data[x] = chunk->type[x];
@@ -109,7 +109,7 @@ char *recalculate_crc(datachunk *chunk)
 		data[x+4] = chunk->body[x];
 	
 	old_crc = chunk->crc;
-	chunk->crc = int_to_chars(chksum_crc32(data, datasize));
+	chunk->crc = (unsigned char *)int_to_chars(chksum_crc32(data, datasize));
 	free(old_crc);
 	free(data);
 	
@@ -209,7 +209,7 @@ void unfilter3(unsigned char *prev, unsigned char *curr)
 
 void unfilter4(unsigned char *prev, unsigned char *curr) 
 {	
-	unsigned int pos, predictor;
+	unsigned int pos;
 	
 	curr[1] += paeth(0, prev[1], 0);
 	curr[2] += paeth(0, prev[2], 0);
@@ -248,13 +248,11 @@ char *read_code(datachunk *chunk)
 {	
 	unsigned int size = chunk->sizenum;
 	unsigned int type = chunk->typenum;
-	unsigned int stepct = 0;
 	unsigned int msgpos = 0;
 	unsigned int oldblksize, count, shift, linepos, x;
 	unsigned char *prevline = malloc(BYTE*step);
 	unsigned char *currline = malloc(BYTE*step);
 	unsigned char charmask = 0x01;
-	unsigned char matchmask = 0xFE;
 	char *msg = malloc(BYTE*size/BYTE*3);
 	char curr = '\0';
 	
@@ -390,4 +388,6 @@ int write_code(datachunk *chunk, char *msg)
 			prevline[linepos] = currline[linepos];
 		}
 	}
+	
+	return endflag;
 }
