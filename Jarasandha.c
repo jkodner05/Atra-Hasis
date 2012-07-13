@@ -2,13 +2,15 @@
 /* This program takes 2 file names as inputs. */
 /* Data from the first file is encrypted. */
 /* The resulting ciphertext is stored in the second file. */
+/* This code was refactored for the Atra-Hasis project. */
+/* This is now a helper function file for the main program. */
 
 #include "Jarasandha.h"
 
 /* Calculates the hash value of a cipher */
 int hash(char cipher[], int keyLen)
 {
-  int i, j, mod;
+  int i, mod;
   mod = 0;
   for (i = 1; i < keyLen - 1; i++) {
     mod += cipher[i] * cipher[i] * cipher[i];
@@ -86,7 +88,7 @@ void decodeSwap(char *msg, char codeString[], int msgLen)
 /* Encrypts input with a Feistel network */
 int encrypt(char msg[])
 {
-  int c, i, j, len, keyLen, msgLen, split;
+  int i, j, len, keyLen, msgLen;
   char cipher[MAXLINE];
   char roundKey[MAXLINE];
 
@@ -133,7 +135,7 @@ int encrypt(char msg[])
 /* Decrypts with a Feistel network */
 void decrypt(char msg[], int msgLen)
 {
-  int c, i, j, len, keyLen, x;
+  int i, j, len, keyLen;
   char cipher[MAXLINE];
   char roundKey[MAXLINE];
 
@@ -173,7 +175,7 @@ void decrypt(char msg[], int msgLen)
  * EOF delimited. */
 char *encrypt_text(const char *msg)
 { 
-  int c, i, j, rpos, wpos, keyLen, msgLen;
+  int c, i, j, rpos, wpos, msgLen;
   char chunk[MAXLINE];
   char *ciphertext;
 
@@ -217,7 +219,7 @@ char *encrypt_text(const char *msg)
  */
 char *decrypt_text(const char *msg)
 {
-  int c, i, j, rpos, wpos, msgLen, keyLen, x;
+  int c, i, j, rpos, wpos, msgLen, x;
   char chunk[MAXLINE];
   char *plaintext;
 
@@ -339,5 +341,6 @@ main(int argc, char *argv[])
     fclose(fin);
     fclose(fout);
   }
+  return 0;
 }
 */
