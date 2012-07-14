@@ -8,6 +8,7 @@
 
 #include "AtraHasis.h"
 
+unsigned int scanlen, step, blksize;
 
 unsigned int chars_to_int(unsigned char *bytes) 
 {

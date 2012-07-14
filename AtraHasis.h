@@ -6,8 +6,8 @@
  *
  */
 
-#include "Geshtu.c"
-#include "Jarasandha.c"
+#include "Jarasandha.h"
+#include "Geshtu.h"
 
 FILE *fin, *fout, *ftext;
 
