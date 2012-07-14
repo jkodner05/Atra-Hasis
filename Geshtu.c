@@ -310,11 +310,11 @@ int write_code(datachunk *chunk, char *msg)
 			}
 			if (count+linepos < size) 
 			{
-				chunk->body[count+linepos] = currline[linepos];
+				//chunk->body[count+linepos] = currline[linepos];
 				if (linepos) 
 				{
-					chunk->body[count+linepos] &= matchmask;	//hide each bit of the char
-					chunk->body[count+linepos] |= ((ch >> shift) & charmask);
+					//chunk->body[count+linepos] &= matchmask;	//hide each bit of the char
+					//chunk->body[count+linepos] |= ((ch >> shift) & charmask);
 					
 					if (shift == 7) 
 					{

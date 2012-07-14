@@ -42,7 +42,7 @@ unsigned char *recalculate_crc(datachunk *chunk)
 {
 	int datasize = BYTE*(CH_SIZE + chunk->sizenum);
 	int x;
-	char *data = malloc(datasize);
+	unsigned char *data = (unsigned char *)malloc(datasize);
 	unsigned char *old_crc;
 	
 	for (x = 0; x < CH_SIZE; x++) 
@@ -53,6 +53,8 @@ unsigned char *recalculate_crc(datachunk *chunk)
 	
 	old_crc = chunk->crc;
 	chunk->crc = (unsigned char *)int_to_chars(chksum_crc32(data, datasize));
+	printf("OLD CRC: %x\n", chars_to_int(old_crc));
+	printf("NEW CRC: %x\n\n", chars_to_int(chunk->crc));
 	free(old_crc);
 	free(data);
 	
@@ -152,10 +154,10 @@ datachunk *collate()
 	unsigned int fullsize = 0, currtype = 0, deposit = 0;
 	unsigned int x;
 	
-	size = malloc(BYTE*CH_SIZE);
-	type = malloc(BYTE*CH_SIZE);
-	body = malloc(BYTE*4);
-	crc = malloc(BYTE*CH_SIZE);	
+	size = (unsigned char *)malloc(BYTE*CH_SIZE);
+	type = (unsigned char *)malloc(BYTE*CH_SIZE);
+	body = (unsigned char *)malloc(BYTE*4);
+	crc = (unsigned char *)malloc(BYTE*CH_SIZE);	
 	
 	get_header();
 	
@@ -206,7 +208,7 @@ datachunk *collate()
 	collated->type = type;
 	collated->body = body;
 	collated->crc = crc;
-	collated->crc = recalculate_crc(chunk);
+	collated->crc = recalculate_crc(collated);
 	collated->sizenum = chars_to_int(size);
 	collated->typenum = chars_to_int(type);
 	
