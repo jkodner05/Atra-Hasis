@@ -264,7 +264,6 @@ char *read_code(datachunk *chunk)
 int write_code(datachunk *chunk, char *msg) 
 {	
 	unsigned int size = chunk->sizenum;
-	unsigned int type = chunk->typenum;
 	unsigned int count = 7;
 	unsigned int x = 0;
 	unsigned int msgloc = 0;

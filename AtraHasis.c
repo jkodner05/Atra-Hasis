@@ -53,8 +53,6 @@ unsigned char *recalculate_crc(datachunk *chunk)
 	
 	old_crc = chunk->crc;
 	chunk->crc = (unsigned char *)int_to_chars(chksum_crc32(data, datasize));
-	printf("OLD CRC: %x\n", chars_to_int(old_crc));
-	printf("NEW CRC: %x\n\n", chars_to_int(chunk->crc));
 	free(old_crc);
 	free(data);
 	
