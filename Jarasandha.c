@@ -31,7 +31,7 @@ void rotateKey(char key[], char new, int keyLen)
 
 /* A "Feistel" function, albeit an unconventional one. */
 /* Nonlinearly and noninvertibly garbles a string */
-void feistel(char codeString[], char roundKey[],
+void feistel(char *codeString, char *roundKey,
 	     int msgLen, int keyLen)
 {
   int i, c, mod;
@@ -99,6 +99,7 @@ int encrypt(char msg[])
 
   /* Count size of message */
   msgLen = strlen(msg);
+  char codeString[msgLen / 2];
 
   /* Make sure message has even length */
   if (msgLen % 2 > 0)
@@ -106,7 +107,7 @@ int encrypt(char msg[])
    
   /* Encode plain text */
   for (i = 1; i <= ROUNDS; i++) {
-    // Generate round key from primary key
+    /* Generate round key from primary key */
     memset(cipher, '\0', MAXLINE);
     memset(roundKey, '\0', MAXLINE);
     
@@ -120,7 +121,7 @@ int encrypt(char msg[])
       rotateKey(roundKey, roundKey[0], keyLen);
     
     /* Use Feistel function to encode half of message with round key */
-    char codeString[msgLen / 2];
+    memset(codeString, '\0', msgLen / 2);
     for (j = 0; j < msgLen / 2; j++)
       codeString[j] = msg[j];
     feistel(codeString, roundKey, msgLen / 2, keyLen);
@@ -138,6 +139,7 @@ void decrypt(char msg[], int msgLen)
   int i, j, len, keyLen;
   char cipher[MAXLINE];
   char roundKey[MAXLINE];
+  char codeString[msgLen / 2];
 
   /* Decode cipher text */
   for (i = ROUNDS; i > 0; i--) {
@@ -155,7 +157,7 @@ void decrypt(char msg[], int msgLen)
       rotateKey(roundKey, roundKey[0], keyLen);
     
     /* Use Feistel function to decode half of message with round key */
-    char codeString[msgLen / 2];
+    memset(codeString, '\0', msgLen / 2);
     for (j = 0; j < msgLen / 2; j++)
       codeString[j] = msg[msgLen - j - 1];
     feistel(codeString, roundKey, msgLen / 2, keyLen);

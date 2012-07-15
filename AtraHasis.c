@@ -14,7 +14,7 @@ unsigned int chars_to_int(unsigned char *bytes)
 {
 	unsigned int *chars = (unsigned int *) bytes;
 	
-	return	(*chars << 0x18) |				//just inverts the bytes
+	return	(*chars << 0x18) | /* just inverts the bytes */
 	(*chars << 0x08 & 0x00FF0000) |
 	(*chars >> 0x08 & 0x0000FF00) |
 	(*chars >> 0x18);	
@@ -25,7 +25,8 @@ unsigned char *int_to_chars(unsigned int integer)
 {
 	unsigned char *chars = malloc(4*BYTE);
 	
-	chars[3] = (char) (integer & 0x000000FF);	//inverts the bytes
+	chars[3] = (char) (integer & 0x000000FF);
+	/* inverts the bytes */
 	chars[2] = (char) ((integer & 0x0000FF00) >> 0x08);
 	chars[1] = (char) ((integer & 0x00FF0000) >> 0x10);
 	chars[0] = (char) (integer >> 0x18);
@@ -123,7 +124,8 @@ datachunk *process_chunk()
 	
 	fread(size, BYTE, CH_SIZE, fin);
 	fread(type, BYTE, CH_SIZE, fin);
-	bodysize = chars_to_int(size);	//calculates size of payload
+	bodysize = chars_to_int(size);
+	/* calculates size of payload */
 	body = malloc(BYTE*bodysize);
 	fread(body, BYTE, bodysize, fin);
 	fread(crc,  BYTE, CH_SIZE, fin);
@@ -136,7 +138,8 @@ datachunk *process_chunk()
 	chunk->sizenum = chars_to_int(size);
 	chunk->typenum = chars_to_int(type);
 	
-	if (chunk->typenum == IDHR)	//calculate length of scanline in pixels and bytes
+	if (chunk->typenum == IDHR) 
+	  /* calculate length of scanline in pixels and bytes */
 	{
 		scanlen = chars_to_int(body);
 		step = (scanlen*3)+1;
@@ -162,13 +165,13 @@ datachunk *collate()
 	
 	chunk = process_chunk();
 	currtype = chunk->typenum;
-	while (currtype != IDAT)	//passes through non-data chunks
+	while (currtype != IDAT) /* passes through non-data chunks */
 	{	
 		chunk = process_chunk();
 		currtype = chunk->typenum;
 	}
 	
-	while (currtype == IDAT)	//sums sizes of data chunks
+	while (currtype == IDAT)	/* sums sizes of data chunks */
 	{
 		fullsize += chunk->sizenum;
 		chunk = process_chunk();
@@ -180,18 +183,18 @@ datachunk *collate()
 	type = int_to_chars(IDAT);
 	
 	
-	rewind(fin);	//starts over
+	rewind(fin);	/* starts over */
 	get_header();
 	
 	chunk = process_chunk();
-	currtype = currtype = chunk->typenum;
+	currtype = chunk->typenum;
 	while (currtype != IDAT) 
 	{
 		chunk = process_chunk();
 		currtype = chunk->typenum;
 	}
 	
-	while (currtype == IDAT)	//appends all data chunks
+	while (currtype == IDAT) /* appends all data chunks */
 	{
 		for (x = 0; x < chunk->sizenum; x++) 
 			body[deposit+x] = chunk->body[x];
@@ -200,7 +203,8 @@ datachunk *collate()
 		currtype = chunk->typenum;
 	}
 	
-	blksize = 0x00000000;	//finds size of first compression block
+	blksize = 0x00000000;
+	/* finds size of first compression block */
 	blksize = (body[4] << 8) + body[3];
 	
 	collated->size = size;
@@ -211,7 +215,7 @@ datachunk *collate()
 	collated->sizenum = chars_to_int(size);
 	collated->typenum = chars_to_int(type);
 	
-	rewind(fin);	//restarts for the next function
+	rewind(fin);	/* restarts for the next function */
 	return collated;
 }
 
@@ -253,6 +257,7 @@ char *encode_msg()
 	while (!feof(ftext)) 
 		msg[len++] = fgetc(ftext);
 	
+	msg[len] = '\0';
 	rewind(ftext);
 	printf("%s\n\n", msg);
 	return encrypt_text(msg);
@@ -271,17 +276,17 @@ int main(int argc, char *argv[])
 	datachunk *chunk, *IDATchunk;
 	int success = FALSE;
 	
-	//creates checksum table. Only needs to be called once
+	/* creates checksum table. Only needs to be called once */
 	chksum_crc32gentab();
 	
-	if(argc > 4 || argc < 2)	//if the format is wrong...
+	if(argc > 4 || argc < 2)	/* if the format is wrong...*/
 	{	
 		printf("\n\t***INCORRECT ARGUMENT FORMAT***\n\n");
 		printf("to ENCODE:\t ./steganography [input image] [output image] [input text]\n");
 		printf("to DECODE:\t ./steganography [input image]\n\n");
 		return 0;
 	}
-	else if(argc == 2)	//if decode format is entered
+	else if(argc == 2)	/* if decode format is entered */
 	{	
 		printf("\nDECODING MESSAGE...\n");
 		open_files(argv[1], NULL, NULL);
@@ -293,7 +298,7 @@ int main(int argc, char *argv[])
 		printf("\n%s\n", msg);
 		printf("\n:END DECODED MESSAGE\n\n");
 	}
-	else if(argc == 4)	//if encode format is entered
+	else if(argc == 4)	/* if encode format is entered */
 	{
 		printf("\nENCODING THIS MESSAGE...\n\n");
 		open_files(argv[1], argv[2], argv[3]);

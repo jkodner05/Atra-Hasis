@@ -16,7 +16,8 @@ unsigned int scanlen, step, blksize;
  *				crc32-checksum until the length is
  *				reached. the crc32-checksum will be
  *				the result.
- */ //found online
+ * found online
+ */
 u_int32_t chksum_crc32 (unsigned char *block, unsigned int length)
 {
 	register unsigned long crc;
@@ -34,7 +35,8 @@ u_int32_t chksum_crc32 (unsigned char *block, unsigned int length)
 /* chksum_crc32gentab() --      to a global crc_tab[256], this one will
  *				calculate the crcTable for crc32-checksums.
  *				it is generated to the polynom [..]
- */ //found online
+ * found online
+ */
 void chksum_crc32gentab ()
 {
 	unsigned long crc, poly;
@@ -104,16 +106,16 @@ void filter(unsigned char *prev, unsigned char *curr, int type)
 		case 0:
 			break;
 		case 1:
-			//not implemented
+		  /* not implemented */
 			break;
 		case 2:
-			//not implemented
+		  /* not implemented */
 			break;
 		case 3:
-			//not implemented
+		  /* not implemented */
 			break;
 		case 4:
-			//not implemented
+		  /* not implemented */
 			break;
 		default:
 			break;
@@ -203,15 +205,18 @@ char *read_code(datachunk *chunk)
 	if(type != IDAT)	return NULL;
 	
 	shift = 0;
-	for (count = 7; count < size; count += step)	//for each scanline
+	for (count = 7; count < size; count += step)
+	  /*for each scanline */
 	{
 		oldblksize = blksize;
 		x = 0;
-		for(linepos = 0; linepos < step; linepos++)		//for each byte
+		for(linepos = 0; linepos < step; linepos++)
+		  /*for each byte */
 		{
-			if ((linepos + count)  == blksize+7)		//if start of compression header reached
+			if ((linepos + count)  == blksize+7)
+			  /* if start of compression header reached */
 			{
-				blksize = 0x00000000;					//calc next and skip past this
+			  blksize = 0x00000000;					/* calc next and skip past this */
 				blksize = (chunk->body[linepos+count+2] << 8) + chunk->body[linepos+count+1];
 				blksize += oldblksize + 5;
 				count += 5;
@@ -220,10 +225,12 @@ char *read_code(datachunk *chunk)
 			if (count+linepos < size) 
 				currline[linepos] = chunk->body[linepos + count];
 		}
-		unfilter(prevline, currline, currline[0]);		//unfilter compression header free line
+		unfilter(prevline, currline, currline[0]);
+		/* unfilter compression header free line */
 		blksize = oldblksize;
 		count -= 5*x;
-		for(linepos = 0; linepos < step; linepos++)		//return unfiltered line to its place
+		for(linepos = 0; linepos < step; linepos++)
+		  /* return unfiltered line to its place */
 		{
 			if ((linepos + count)  == blksize+7) 
 			{
@@ -237,12 +244,14 @@ char *read_code(datachunk *chunk)
 				chunk->body[count+linepos] = currline[linepos];
 				if (linepos) 
 				{
-					curr |= ((chunk->body[count+linepos] & charmask) << shift);	//rebuild each char
+					curr |= ((chunk->body[count+linepos] & charmask) << shift);
+					/* rebuild each char */
 					
-					if (shift == 7)		//output char when it's reconstructed
+					if (shift == 7)
+					  /* output char when it's reconstructed */
 					{	
 						msg[msgpos++] = curr;
-						if (curr == EOF /*!curr*/) //entire message was encluded
+						if (curr == EOF /*!curr*/) /* entire message was encluded */
 							return msg;
 						curr = '\0';
 						shift = 0;
@@ -255,7 +264,7 @@ char *read_code(datachunk *chunk)
 		}
 	}
 	
-	//message was clipped due to size constraints
+	/* message was clipped due to size constraints */
 	msg[msgpos] = EOF;
 	return msg;
 }
@@ -270,11 +279,11 @@ int write_code(datachunk *chunk, char *msg)
 	unsigned int linepos, oldblksize;
 	unsigned char prevline[BYTE*step];
 	unsigned char currline[BYTE*step];
-	unsigned char charmask = 0x01;	//0b 0000 0001
-	unsigned char matchmask = 0xFE;	//0b 1111 1110
+	unsigned char charmask = 0x01;	/* 0b 0000 0001 */
+	unsigned char matchmask = 0xFE;	/* 0b 1111 1110 */
 	char ch, shift, endflag;
 	
-	//if this is a data chunk, can write data here
+	/* if this is a data chunk, can write data here */
 	ch = msg[msgloc];
 	endflag = ch == EOF;
 	shift = 0;
@@ -312,7 +321,7 @@ int write_code(datachunk *chunk, char *msg)
 				chunk->body[count+linepos] = currline[linepos];
 				if (linepos) 
 				{
-					chunk->body[count+linepos] &= matchmask;	//hide each bit of the char
+				  chunk->body[count+linepos] &= matchmask;	/* hide each bit of the char */
 					chunk->body[count+linepos] |= ((ch >> shift) & charmask);
 					
 					if (shift == 7) 
