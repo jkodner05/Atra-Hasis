@@ -20,29 +20,29 @@ To decode data from an image,
 
 
 Included Files
-______________
+--------------
 
 * `Makefile`
-* `AtraHasis.c, .h` -- main program
-* `Geshtu.c, .h` -- for image encoding
-* `Jarasandha.c, .h` -- for text encryption
-* test pngs
-* 'text_example.txt' -- short example text file
-* 'example2.txt' -- unicode text examples
+* `AtraHasis.c`, `AtraHasis.h` -- main program
+* `Geshtu.c`, `Geshtu.h` -- for image encoding
+* `Jarasandha.c`, `Jarasandha.h` -- for text encryption
+* `gundam.png`, `test.png`, `test1.png`, `test2.png`, `test3.png` -- sample images
+* `text_example.txt` -- short example text file
+* `example2.txt` -- unicode text examples
 
 Known Issues
-____________
+------------
 
 * Infinite loop on Linux
 * Black line at the bottom of and unviewable thumbnail for encoded png files
 
 Future Development
-__________________
+------------------
 
 * Cleanup of known bugs
 * User password input to generate encryption key
 
-Credits
-_______
+Programmers
+-----------
 
 © Jordan Kodner and Anand Sundaram, University of Pennsylvania School of Engineering and Applied Sciences, all rights reserved, 2012.
