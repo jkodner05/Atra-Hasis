@@ -59,7 +59,7 @@ void feistel(char *codeString, char *roundKey,
   for (i = 0; i < msgLen; i++) {
     mod = hash(tempKey, keyLen);
     c = (int) codeString[i];
-    mod &= c + 5;
+    mod %= c + 5;
     mod &= CHAR_MAX;
     /* Incorporate plaintext into cipher for next character */
     rotateKey(tempKey, codeString[i], keyLen);

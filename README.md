@@ -36,7 +36,7 @@ Included Files
 Known Issues
 ------------
 
-* Infinite loop on Linux
+* Stray 0xFF _(CHAR_MAX == 255)_ printed to command line during encoding
 * Black line at the bottom of and unviewable thumbnail for encoded png files
 
 Future Development
