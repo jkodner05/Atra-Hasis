@@ -11,10 +11,13 @@ Use
 
 Atra-Hasis can be compiled from the command line on any system with access to gcc. To compile, run "make" from the command line while in the folder containing all the source files. This creates an executable named "AtraHasis."
 
-To encode data into an image, 
+To encode data into an image:
+
 	./AtraHasis [input_image.png] [output_image.png] [text_file.txt]
 
-To decode data from an image, 
+
+To decode data from an image: 
+
 	./AtraHasis [encoded_image.png]
 
 
