@@ -7,15 +7,32 @@
 
 #include "Jarasandha.h"
 
+/* Rotates the bits of unsigned input */
+unsigned rightrot(unsigned x, int n)
+{
+  int i, lsb;
+  unsigned spin = x;
+  size_t len = 8*sizeof(x);
+  for (i = 0; i < n; i++) {
+    lsb = (spin & 1);
+    spin >>= 1;
+    spin |= lsb << (len - 1);
+  }
+  return spin;
+}
+
 /* Calculates the hash value of a cipher */
 int hash(char cipher[], int keyLen)
 {
-  int i, mod;
-  mod = 0;
+  int i, mod, temp;
+  mod = cipher[0] ^ cipher[keyLen - 1];
   for (i = 1; i < keyLen - 1; i++) {
-    mod += cipher[i] * cipher[i] * cipher[i];
-    mod -= cipher[i - 1] * cipher[i];
-    mod += cipher[i + 1];
+    temp = cipher[i - 1] & rightrot(cipher[i], cipher[i + 1] & 7);
+    temp |= cipher[i] & rightrot(cipher[i + 1], cipher[i - 1] & 7);
+    temp |= cipher[i + 1] & rightrot(cipher[i -1], cipher[i] & 7);
+    temp ^= ~(cipher[i - 1] & cipher[i] & cipher[i+1]);
+    mod = rightrot(mod, i & 7);
+    mod ^= temp;
   }
   return mod;
 }
@@ -42,8 +59,8 @@ void feistel(char *codeString, char *roundKey,
   for (i = 0; i < msgLen; i++) {
     mod = hash(tempKey, keyLen);
     c = (int) codeString[i];
-    mod %= c + 5;
-    mod %= CHAR_MAX;
+    mod &= c + 5;
+    mod &= CHAR_MAX;
     /* Incorporate plaintext into cipher for next character */
     rotateKey(tempKey, codeString[i], keyLen);
     /* Replace plaintext with ciphertext character */
@@ -340,5 +357,5 @@ int main(int argc, char *argv[])
     fclose(fout);
   }
   return 0;
-}*/
-
+}
+*/
