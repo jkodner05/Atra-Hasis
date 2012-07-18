@@ -22,6 +22,43 @@ unsigned rightrot(unsigned x, int n)
   return spin;
 }
 
+/* Takes a \0 - delimited password input */
+/* Generates and returns an EOF-delimited encryption key */
+char *keygen(char *pass)
+{
+  int i, j;
+  unsigned long x;
+  int len = strlen(pass);
+  char *key = malloc(37 * sizeof(char));
+  unsigned long **rands = malloc((len + 1) * sizeof(unsigned long *));
+  unsigned long *garble = malloc((len + 1) * sizeof(unsigned long));
+  for (i = 0; i < len - 1; i++)
+    for (j = 1; j < (pass[i+1] & ULONG_MAX); j++) {
+      garble[i] = rightrot((unsigned long) pass[i], j);
+      garble[i] |= (pass[i+1] & (1 << (j & CHAR_MAX))) << (j & CHAR_MAX);
+    }
+  for (j = 1; j < (pass[0] & ULONG_MAX); j++) {
+    garble[i] = rightrot((unsigned long) pass[i], j);
+    garble[i] ^= (pass[0] & (1 << (j & CHAR_MAX))) << (j & CHAR_MAX);
+  }
+
+  for (i = 0; i < len; i++) {
+    x = garble[i];
+    rands[i] = malloc(37 * sizeof(unsigned long));
+    for (j = 0; j < 36; j++)
+      rands[i][j] = (x *= 69069, x += 362437);
+  }
+
+  for (i = 0; i < 36; i++) {
+    x = ULONG_MAX;
+    for (j = 0; j < len; j++)
+      x ^= rands[j][i];
+    key[i] = x & CHAR_MAX;
+  }
+  key[i] = EOF;
+  return key;
+}
+
 /* Calculates the hash value of a cipher */
 int hash(char cipher[], int keyLen)
 {
