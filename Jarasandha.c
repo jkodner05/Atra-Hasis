@@ -7,6 +7,9 @@
 
 #include "Jarasandha.h"
 
+/* Initialize default key */
+char *KEY = defaultKey;
+
 /* Rotates the bits of unsigned input */
 unsigned rightrot(unsigned x, int n)
 {
@@ -24,12 +27,11 @@ unsigned rightrot(unsigned x, int n)
 
 /* Takes a \0 - delimited password input */
 /* Generates and returns an EOF-delimited encryption key */
-char *keygen(char *pass)
+void keygen(char *pass)
 {
   int i, j;
   unsigned long x;
   int len = strlen(pass);
-  char *key = malloc(37 * sizeof(char));
   unsigned long **rands = malloc((len + 1) * sizeof(unsigned long *));
   unsigned long *garble = malloc((len + 1) * sizeof(unsigned long));
   for (i = 0; i < len - 1; i++)
@@ -53,10 +55,9 @@ char *keygen(char *pass)
     x = ULONG_MAX;
     for (j = 0; j < len; j++)
       x ^= rands[j][i];
-    key[i] = x & CHAR_MAX;
+    KEY[i] = x & CHAR_MAX;
   }
-  key[i] = EOF;
-  return key;
+  KEY[i] = EOF;
 }
 
 /* Calculates the hash value of a cipher */
