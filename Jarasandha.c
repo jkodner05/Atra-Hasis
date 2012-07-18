@@ -16,7 +16,8 @@ unsigned rightrot(unsigned x, int n)
   for (i = 0; i < n; i++) {
     lsb = (spin & 1);
     spin >>= 1;
-    spin |= lsb << (len - 1);
+    if (lsb)
+      spin |= lsb << (len - 1);
   }
   return spin;
 }
