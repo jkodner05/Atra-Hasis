@@ -301,11 +301,21 @@ int main(int argc, char *argv[])
 	chksum_crc32gentab();
 	
 	/* if the format is wrong...*/
-	if(argc > 5 || argc < 2 || ((argc == 3 || argc == 5) && strcmp(argv[1],"-u")))
+	if (argc >= 2 && !strcmp(argv[1],"-h")) 
+	{
+		printf("\n***Atra-Hasis Steganography Tool***\n\n");
+		printf("Program default is to encrypt text:\n");
+		printf("to ENCODE with ENCRYPTION:\t ./AtraHasis [input image] [output image] [input text]\n");
+		printf("to DECODE with DECRYPTION:\t ./AtraHasis [input image]\n\n");
+		printf("User may choose to use plaintext instead with the [-u] flag.\n");
+		printf("to ENCODE with PLAINTEXT:\t ./AtraHasis -u [input image] [output image] [input text]\n");
+		printf("to DECODE with PLAINTEXT:\t ./AtraHasis -u [input image]\n\n");
+		return 0;
+	}
+	else if(argc > 5 || argc < 2 || ((argc == 3 || argc == 5) && strcmp(argv[1],"-u")))
 	{	
-		printf("\n\t***INCORRECT ARGUMENT FORMAT***\n\n");
-		printf("to ENCODE:\t ./steganography [input image] [output image] [input text]\n");
-		printf("to DECODE:\t ./steganography [input image]\n\n");
+		printf("\nINCORRECT ARGUMENT FORMAT\n");
+		printf("use [-h] for help.\n\n");
 		return 0;
 	}
 	
