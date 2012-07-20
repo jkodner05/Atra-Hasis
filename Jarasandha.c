@@ -8,7 +8,7 @@
 #include "Jarasandha.h"
 
 /* Initialize default key */
-char *KEY = "XXHQ\'GGG\n529\t95???..!!~12v1PP75rcc{p\0";
+char KEY[37] = "XXHQ\'GGG\n529\t95???..!!~12v1PP75rcc{p\0";
 
 /* Rotates the bits of unsigned input */
 unsigned rightrot(unsigned x, int n)
@@ -30,33 +30,45 @@ unsigned rightrot(unsigned x, int n)
 void keygen(char *pass)
 {
   int i, j;
-  unsigned long x;
+  unsigned long x, y;
   int len = strlen(pass);
   int keyLen = strlen(KEY);
   unsigned long **rands = malloc((len + 1) * sizeof(unsigned long *));
   unsigned long *garble = malloc((len + 1) * sizeof(unsigned long));
   for (i = 0; i < len - 1; i++)
-    for (j = 1; j < (pass[i+1] & ULONG_MAX); j++) {
+  {
+    for (j = 1; j < (pass[i+1] & ULONG_MAX); j++) 
+	{
       garble[i] = rightrot((unsigned long) pass[i], j);
       garble[i] |= (pass[i+1] & (1 << (j & CHAR_MAX))) << (j & CHAR_MAX);
     }
-  for (j = 1; j < (pass[0] & ULONG_MAX); j++) {
+  }
+  for (j = 1; j < (pass[0] & ULONG_MAX); j++) 
+  {
     garble[i] = rightrot((unsigned long) pass[i], j);
     garble[i] ^= (pass[0] & (1 << (j & CHAR_MAX))) << (j & CHAR_MAX);
   }
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) 
+  {
     x = garble[i];
     rands[i] = malloc((keyLen + 1) * sizeof(unsigned long));
-    for (j = 0; j < 36; j++)
-      rands[i][j] = (x *= 69069, x += 362437);
+    for (j = 0; j < keyLen; j++)
+	{
+		x *= 69069;
+		x += 362437;
+      rands[i][j] = x;
+	}
   }
 
-  for (i = 0; i < keyLen; i++) {
+  for (i = 0; i < keyLen; i++) 
+  {
     x = ULONG_MAX;
     for (j = 0; j < len; j++)
-      x ^= rands[j][i];
-    KEY[i] = x & CHAR_MAX;
+	{
+		x ^= rands[j][i];
+	}
+    KEY[i] = (char) (x & CHAR_MAX);
   }
   KEY[i] = EOF;
 }

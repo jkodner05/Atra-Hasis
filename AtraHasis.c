@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 	if (argc == 2 || argc == 4)	/* if text will be encoded */
 	{
 		printf("Enter password for this image: ");
-		fgets(password, sizeof password, stdin);
+		fgets(password, sizeof(password), stdin);
 		keygen(password);
 	}
 	else 
