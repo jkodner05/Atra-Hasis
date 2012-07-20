@@ -6,7 +6,6 @@
 
 /* Encryption key should have at least as many characters as */
 /* the number of enryption rounds */
-#define defaultKey "XXHQ\'GGG\n529\t95???..!!~12v1PP75rcc{p"
 #define ROUNDS 32
 #define ENCODE 1
 #define DECODE 0

@@ -181,6 +181,7 @@ datachunk *process_chunk()
 	chunk->crc = crc;
 	chunk->sizenum = chars_to_int(size);
 	chunk->typenum = chars_to_int(type);
+	chunk->crc = recalculate_crc(chunk);
 	if(chars_to_int(crc) != chars_to_int(recalculate_crc(chunk)))
 	{
 		//printf("crc: %u,", chars_to_int(crc));
@@ -367,7 +368,7 @@ int main(int argc, char *argv[])
 	{
 		printf("Enter password for this image: ");
 		fgets(password, sizeof password, stdin);
-		//keygen(password);
+		keygen(password);
 	}
 	else 
 	{

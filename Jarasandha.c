@@ -8,7 +8,7 @@
 #include "Jarasandha.h"
 
 /* Initialize default key */
-char *KEY = defaultKey;
+char *KEY = "XXHQ\'GGG\n529\t95???..!!~12v1PP75rcc{p\0";
 
 /* Rotates the bits of unsigned input */
 unsigned rightrot(unsigned x, int n)
@@ -32,6 +32,7 @@ void keygen(char *pass)
   int i, j;
   unsigned long x;
   int len = strlen(pass);
+  int keyLen = strlen(KEY);
   unsigned long **rands = malloc((len + 1) * sizeof(unsigned long *));
   unsigned long *garble = malloc((len + 1) * sizeof(unsigned long));
   for (i = 0; i < len - 1; i++)
@@ -46,12 +47,12 @@ void keygen(char *pass)
 
   for (i = 0; i < len; i++) {
     x = garble[i];
-    rands[i] = malloc(37 * sizeof(unsigned long));
+    rands[i] = malloc((keyLen + 1) * sizeof(unsigned long));
     for (j = 0; j < 36; j++)
       rands[i][j] = (x *= 69069, x += 362437);
   }
 
-  for (i = 0; i < 36; i++) {
+  for (i = 0; i < keyLen; i++) {
     x = ULONG_MAX;
     for (j = 0; j < len; j++)
       x ^= rands[j][i];
