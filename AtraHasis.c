@@ -8,7 +8,7 @@
 
 #include "AtraHasis.h"
 
-unsigned int scanlen, step, blksize;
+unsigned int scanlen, step, blksize, encrypt_flag;
 
 unsigned int chars_to_int(unsigned char *bytes) 
 {
@@ -137,6 +137,11 @@ datachunk *process_chunk()
 	chunk->crc = crc;
 	chunk->sizenum = chars_to_int(size);
 	chunk->typenum = chars_to_int(type);
+	if(chars_to_int(crc) != chars_to_int(recalculate_crc(chunk)))
+	{
+		printf("crc: %u,", chars_to_int(crc));
+		printf("\tnew crc: %u\n", chars_to_int(recalculate_crc(chunk)));
+	}
 	
 	if (chunk->typenum == IDHR) 
 	  /* calculate length of scanline in pixels and bytes */
@@ -244,7 +249,7 @@ char *encode_msg()
 	unsigned int len = 0;
 	char *msg;
 	
-	while (!feof(ftext)) 
+	while (!feof(ftext))
 	{
 		fgetc(ftext);
 		len++;
@@ -257,39 +262,70 @@ char *encode_msg()
 	while (!feof(ftext)) 
 		msg[len++] = fgetc(ftext);
 	
-	msg[len] = '\0';
 	rewind(ftext);
+	msg[len-1] = '\0';
 	printf("%s\n\n", msg);
+	msg[len-1] = EOF;
+	
+	if (!encrypt_flag) 
+		return msg;
 	return encrypt_text(msg);
 }
 
 
 char *decode_msg(char *msg)
 {
-	return decrypt_text(msg);
+	unsigned int i = 0;
+	
+	if (encrypt_flag) /* if message was encrypted */
+		return decrypt_text(msg);
+	
+	while (msg[i] != EOF) /* else, get rid end ending EOF */
+		i++;
+	
+	msg[i] = '\0';
+	
+	return msg;
 }
 
 int main(int argc, char *argv[]) 
 {
 	unsigned char *header;
-	char *msg;
+	char *msg, password[63];
 	datachunk *chunk, *IDATchunk;
+	char arg_offset = 0;
 	int success = FALSE;
+	encrypt_flag = TRUE;
 	
 	/* creates checksum table. Only needs to be called once */
 	chksum_crc32gentab();
 	
-	if(argc > 4 || argc < 2)	/* if the format is wrong...*/
+	/* if the format is wrong...*/
+	if(argc > 5 || argc < 2 || ((argc == 3 || argc == 5) && strcmp(argv[1],"-u")))
 	{	
 		printf("\n\t***INCORRECT ARGUMENT FORMAT***\n\n");
 		printf("to ENCODE:\t ./steganography [input image] [output image] [input text]\n");
 		printf("to DECODE:\t ./steganography [input image]\n\n");
 		return 0;
 	}
-	else if(argc == 2)	/* if decode format is entered */
+	
+	if (argc == 2 || argc == 4)	/* if text will be encoded */
+	{
+		printf("Enter password for this image: ");
+		fgets(password, sizeof password, stdin);
+		//keygen(password);
+	}
+	else 
+	{
+		encrypt_flag = FALSE;
+		arg_offset = 1;
+	}
+
+	
+	if(argc <= 3)	/* if decode format is entered */
 	{	
 		printf("\nDECODING MESSAGE...\n");
-		open_files(argv[1], NULL, NULL);
+		open_files(argv[arg_offset+1], NULL, NULL);
 		IDATchunk = collate();
 		msg = read_code(IDATchunk);
 		msg = decode_msg(msg);
@@ -298,10 +334,10 @@ int main(int argc, char *argv[])
 		printf("\n%s\n", msg);
 		printf("\n:END DECODED MESSAGE\n\n");
 	}
-	else if(argc == 4)	/* if encode format is entered */
+	else	/* if encode format is entered */
 	{
 		printf("\nENCODING THIS MESSAGE...\n\n");
-		open_files(argv[1], argv[2], argv[3]);
+		open_files(argv[arg_offset+1], argv[arg_offset+2], argv[arg_offset+3]);
 		msg = encode_msg();
 		IDATchunk = collate();
 		
