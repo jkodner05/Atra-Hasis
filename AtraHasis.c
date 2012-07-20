@@ -14,7 +14,8 @@ unsigned int chars_to_int(unsigned char *bytes)
 {
 	unsigned int *chars = (unsigned int *) bytes;
 	
-	return	(*chars << 0x18) | /* just inverts the bytes */
+	/* just inverts the bytes */
+	return	(*chars << 0x18) |
 	(*chars << 0x08 & 0x00FF0000) |
 	(*chars >> 0x08 & 0x0000FF00) |
 	(*chars >> 0x18);	
@@ -26,17 +27,13 @@ unsigned char *int_to_chars(unsigned int integer)
 	unsigned char *chars = malloc(4*BYTE);
 	
 	chars[3] = (char) (integer & 0x000000FF);
+	
 	/* inverts the bytes */
 	chars[2] = (char) ((integer & 0x0000FF00) >> 0x08);
 	chars[1] = (char) ((integer & 0x00FF0000) >> 0x10);
 	chars[0] = (char) (integer >> 0x18);
 	
 	return chars;
-}
-
-void free_chunk(datachunk *chunk) 
-{	
-	free(chunk);
 }
 
 
@@ -64,36 +61,83 @@ unsigned char *recalculate_crc(datachunk *chunk)
 
 void close_files() 
 {
-	fclose(fin);
+	if(fin)		fclose(fin);
 	if(fout)	fclose(fout);
 	if(ftext)	fclose(ftext);
+	fin = NULL;
+	fout = NULL;
+	ftext = NULL;
 }
 
 
 void open_files(char *inname, char *outname, char* textname) 
 {
-	if((fin = fopen(inname, "r")) == NULL) 
+	int len = strlen(inname);
+	char *intype;
+	char *outtype;
+	char *texttype;
+	
+	intype = strstr(inname, ".png");	
+	if (intype) 
 	{
-		printf("***Input file could not be opened***\n");
-	}
-	else if(outname && textname) 
-	{
-		if((fout = fopen(outname, "w")) == NULL) 
+		if (strlen(intype) > 4)
 		{
-			printf("***Output file could not be opened***\n");
+			printf("ERROR\tInput image file type must be .png!\n");
 			close_files();
 		}
+		else if((fin = fopen(inname, "r")) == NULL) 
+		{
+			printf("ERROR\tInput file could not be opened!\n");
+			close_files();
+		}
+	}
+	else
+	{
+		printf("ERROR\tInput image file type must be .png!\n");
+		close_files();
+	}
+
+	if (outname) 
+	{
+		outtype = strstr(outname, ".png");
+		if (outtype) 
+		{
+			if (strlen(outtype) > 4)
+			{
+				printf("ERROR\tOutput image file type must be .png!\n");
+				close_files();
+			}
+			else if((fout = fopen(outname, "w")) == NULL) 
+			{
+				printf("ERROR\tOutput file could not be opened!\n");
+				close_files();
+			}
+
+		}
+		else
+		{
+			printf("ERROR\tOutput image file type must be .png!\n");
+			close_files();
+		}
+	}
+
+	if (textname) 
+	{
+		texttype = strstr(textname, ".txt");
+		if (texttype) 
+		{
+			if (strlen(texttype) > 4)
+				printf("WARNING\tText file may not be plaintext! Proceeding anyway...\n");
+		}
+		else
+			printf("WARNING\tText file may not be plaintext! Proceeding anyway...\n");
 		if((ftext = fopen(textname, "r")) == NULL) 
 		{
-			printf("***Text file could not be opened***\n");
+			printf("ERROR\tText file could not be opened!\n");
 			close_files();
 		}
 	}
-	else 
-	{
-		fout = NULL;
-		ftext = NULL;
-	}
+
 }
 
 void write_out(unsigned char *data, unsigned int size) 
@@ -139,8 +183,8 @@ datachunk *process_chunk()
 	chunk->typenum = chars_to_int(type);
 	if(chars_to_int(crc) != chars_to_int(recalculate_crc(chunk)))
 	{
-		printf("crc: %u,", chars_to_int(crc));
-		printf("\tnew crc: %u\n", chars_to_int(recalculate_crc(chunk)));
+		//printf("crc: %u,", chars_to_int(crc));
+		//printf("\tnew crc: %u\n", chars_to_int(recalculate_crc(chunk)));
 	}
 	
 	if (chunk->typenum == IDHR) 
@@ -334,8 +378,15 @@ int main(int argc, char *argv[])
 	
 	if(argc <= 3)	/* if decode format is entered */
 	{	
-		printf("\nDECODING MESSAGE...\n");
+		printf("\n");
 		open_files(argv[arg_offset+1], NULL, NULL);
+		if (!fin)
+		{
+			printf("MESSAGE ENCODING FAILED. Argument files not valid.\n\n");
+			return 0;
+		}
+		printf("DECODING MESSAGE...\n");
+		
 		IDATchunk = collate();
 		msg = read_code(IDATchunk);
 		msg = decode_msg(msg);
@@ -346,8 +397,15 @@ int main(int argc, char *argv[])
 	}
 	else	/* if encode format is entered */
 	{
-		printf("\nENCODING THIS MESSAGE...\n\n");
+		printf("\n");
 		open_files(argv[arg_offset+1], argv[arg_offset+2], argv[arg_offset+3]);
+		if (!fin || !fout || !ftext)
+		{
+			printf("MESSAGE ENCODING FAILED. Argument files not valid.\n\n");
+			return 0;
+		}
+		printf("ENCODING THIS MESSAGE...\n\n");
+		
 		msg = encode_msg();
 		IDATchunk = collate();
 		
@@ -359,30 +417,30 @@ int main(int argc, char *argv[])
 		while (chars_to_int(chunk->type) != IDAT) 
 		{
 			write_body(chunk, NULL);
-			free_chunk(chunk);
+			free(chunk);
 			chunk = process_chunk();
 		}
 		success = write_body(IDATchunk, msg);
-		free_chunk(IDATchunk);
+		free(IDATchunk);
 		
 		while (chars_to_int(chunk->type) == IDAT) 
 		{
 			chunk = process_chunk();
 		}
 		write_body(chunk, NULL);
-		free_chunk(chunk);
+		free(chunk);
 		
 		while (chars_to_int(chunk->type) != IEND) 
 		{
 			chunk = process_chunk();
 			write_body(chunk, NULL);
-			free_chunk(chunk);
+			free(chunk);
 		}
 		
 		if (success)
 			printf("MESSAGE ENCODED SUCCESSFULLY\n\n");
 		else 
-			printf("MESSAGE ENCODING FAILED\nMaybe your image was too small?\n\n");
+			printf("MESSAGE ENCODING FAILED. Image was too small.\n\n");
 
 	}
 	close_files();
