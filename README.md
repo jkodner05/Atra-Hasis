@@ -26,6 +26,8 @@ To decode data from an image:
 	./AtraHasis [encoded_image.png]
 User will be prompted for a password.
 
+When decoding encrypted data, if an incorrect password is used, the output will be unintelligible. In order to retrieve the original text, the correct password must be used. Thus encrypted data will be accessible only to Atra-Hasis users with knowledge of the appropriate password.
+
 To turn off encryption and encode/decode plaintext, use the `-u` flag:
 	
 	./AtraHasis -u [input_image.png] [output_image.png] [text_file.txt]
@@ -52,7 +54,6 @@ Future Development
 ------------------
 
 * Cleanup of known bugs
-* User password input to generate encryption key
 
 Programmers
 -----------
